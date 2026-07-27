@@ -227,7 +227,7 @@
         let errorMsg = document.getElementById("errorMsg");
 
         // Kiểm tra ID phải là số và có độ dài từ 8 đến 10 chữ số (không bị khóa ban nữa)
-        let isValidId = /^\d{8,10}$/.test(gameId);
+        let isValidId = /^\d{8,11}$/.test(gameId);
 
         if (!isValidId) {
             errorMsg.innerHTML = `❌ ID không hợp lệ! (ID phải có từ 8 đến 10 số). Vui lòng nhập lại!`;
