@@ -42,7 +42,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding-top: 40px; /* Đẩy nội dung xuống tránh bị thanh thông báo che */
+            padding-top: 40px;
         }
         .container {
             background-color: #ffffff;
@@ -54,11 +54,25 @@
             border: 2px solid #4CAF50;
             box-sizing: border-box;
         }
+        
+        /* Hiệu ứng đổi màu chữ Kim Cương Vip */
         h2 {
-            color: #2e7d32;
             text-align: center;
             margin-bottom: 20px;
+            font-size: 24px;
+            background: linear-gradient(45deg, #ff007f, #ff8c00, #4CAF50, #00bfff, #9370db);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowGlow 5s ease infinite;
         }
+
+        @keyframes rainbowGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -174,7 +188,7 @@
     <!-- Bước 1: Đăng nhập ID Game -->
     <div id="step-login" class="form-group">
         <label for="gameId">Nhập ID Game:</label>
-        <input type="text" id="gameId" placeholder="Nhập ID (9 hoặc 10 số)...">
+        <input type="text" id="gameId" placeholder="Nhập ID (từ 8 đến 11 số)...">
         <button onclick="handleLogin()">Đăng Nhập</button>
         <p id="errorMsg" style="color: #f44336; font-size: 13px; margin-top: 5px; font-weight: bold;"></p>
     </div>
@@ -257,17 +271,17 @@
 <script>
     let currentGameId = "";
     let currentPackage = "";
-    let isSending = false; // Chống spam click liên tục
+    let isSending = false;
 
     function handleLogin() {
         let gameId = document.getElementById("gameId").value.trim();
         let errorMsg = document.getElementById("errorMsg");
 
-        // ID phải chính xác 9 hoặc 10 chữ số (trên 8 và dưới 11)
-        let isValidId = /^\d{9,10}$/.test(gameId);
+        // ID từ 8 đến 11 chữ số
+        let isValidId = /^\d{8,11}$/.test(gameId);
 
         if (!isValidId) {
-            errorMsg.innerHTML = `❌ ID không hợp lệ! (ID phải có 9 hoặc 10 số). Vui lòng nhập lại!`;
+            errorMsg.innerHTML = `❌ ID không hợp lệ! (ID phải có từ 8 đến 11 số). Vui lòng nhập lại!`;
             return;
         }
 
@@ -297,7 +311,6 @@
         }
     }
 
-    // Hàm thêm hiệu ứng chạy thông báo nạp tiền mới
     function addNewMarqueeItem(gameId, packageInfo) {
         let marqueeDiv = document.querySelector(".marquee-text");
         if (!marqueeDiv) return;
@@ -314,7 +327,6 @@
             return;
         }
 
-        // Chống spam click liên tục trong 5 giây
         if (isSending) {
             alert("Bạn đang thao tác quá nhanh, vui lòng từ từ!");
             return;
@@ -374,7 +386,6 @@
         isSending = true;
         setTimeout(() => { isSending = false; }, 5000);
 
-        // Gói dữ liệu gửi ngầm qua API ẩn bảo mật trên Vercel (giấu tuyệt đối Token)
         let payload = {
             gameId: currentGameId,
             packageInfo: currentPackage,
@@ -404,5 +415,5 @@
 </script>
 
 </body>
-    </html>
-    
+                    </html>
+            
