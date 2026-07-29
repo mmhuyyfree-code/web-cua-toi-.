@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đơn Hàng - VIPER SHOP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container" style="max-width: 650px;">
+    <h2>QUẢN LÝ ĐƠN HÀNG NẠP</h2>
+    
+    <!-- Widget thống kê số đơn chờ xử lý -->
+    <div style="background: rgba(26, 34, 54, 0.9); border: 1px solid #00ffcc; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+        <span style="font-size: 13px; color: #cbd5e1;">Số đơn đang chờ xử lý:</span> 
+        <span id="pendingCount" style="font-size: 18px; color: #ff007f; font-weight: bold;">0</span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <button type="button" onclick="clearHistory()" style="background: #ff3366; color: white; padding: 8px 12px; font-size: 12px; width: auto; margin-top: 0;">🗑 Xóa tất cả lịch sử</button>
+        <button type="button" onclick="location.reload()" style="background: #00ffcc; color: #0b0f19; font-weight: bold; padding: 8px 12px; font-size: 12px; width: auto; margin-top: 0;">🔄 Làm mới</button>
+    </div>
+
+    <div id="adminHistory" style="display: flex; flex-direction: column; gap: 10px; max-height: 450px; overflow-y: auto; padding-right: 5px;"></div>
+
+    <button type="button" onclick="window.location.href='index.html'" style="background: #2a3b6c; color: #ffffff; margin-top: 15px;">⬅ VỀ TRANG CHỦ</button>
+</div>
+
+<script>
+    function renderAdminHistory() {
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        let container = document.getElementById("adminHistory");
+        container.innerHTML = "";
+
+        let pendingCounter = 0;
+
+        if (history.length === 0) {
+            container.innerHTML = "<p style='text-align: center; color: #cbd5e1; padding: 20px;'>Chưa có đơn hàng nào được ghi nhận.</p>";
+            document.getElementById("pendingCount").innerText = "0";
+            return;
+        }
+
+        history.forEach((item, index) => {
+            let isCompleted = item.status === "Đã xử lý";
+            if (!isCompleted) {
+                pendingCounter++;
+            }
+
+            let cardDetails = "";
+            if (item.card) {
+                cardDetails = `
+                    <div style="background: rgba(11, 15, 25, 0.9); padding: 8px; border-radius: 6px; margin-top: 6px; border: 1px dashed #ff007f; font-size: 11px;">
+                        <span style="color: #ff007f; font-weight: bold;">Thẻ cào:</span> ${item.card.cardType} - ${item.card.cardPrice}<br>
+                        <span style="color: #cbd5e1;">Mã PIN:</span> <b style="color: #00ffcc; user-select: all;">${item.card.cardCode}</b><br>
+                        <span style="color: #cbd5e1;">Số Seri:</span> <b style="color: #00ffcc; user-select: all;">${item.card.cardSerial}</b>
+                    </div>
+                `;
+            }
+
+            let badgeColor = isCompleted ? "#00ffcc" : (item.payment.includes("Chuyển khoản") ? "#00ffcc" : "#ffaa00");
+            let badgeText = isCompleted ? "✔ Đã hoàn thành" : item.payment;
+
+            let actionButton = "";
+            if (!isCompleted) {
+                actionButton = `
+                    <button type="button" onclick="markAsCompleted(${index})" style="background: linear-gradient(135deg, #00ffcc, #00bfff); color: #0b0f19; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%;">✔ XỬ LÝ THÀNH CÔNG</button>
+                `;
+            } else {
+                actionButton = `
+                    <div style="margin-top: 8px; text-align: center; color: #00ffcc; font-size: 11px; font-weight: bold;">ĐÃ DUYỆT THÀNH CÔNG</div>
+                `;
+            }
+
+            let div = document.createElement("div");
+            div.style.cssText = "background: rgba(26, 34, 54, 0.9); padding: 12px; border-radius: 8px; border: 1px solid #2a3b6c; font-size: 12px; color: #e2e8f0; position: relative;";
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="color: #94a3b8;">🕒 ${item.time}</span>
+                    <span style="background: ${badgeColor}; color: #0b0f19; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px;">${badgeText}</span>
+                </div>
+                <div><b>Game:</b> ${item.game} | <b>ID:</b> <span style="color: #00ffcc;">${item.fullId}</span></div>
+                <div><b>Gói nạp:</b> <span style="color: #ff007f; font-weight: bold;">${item.package}</span></div>
+                ${cardDetails}
+                ${actionButton}
+            `;
+            container.appendChild(div);
+        });
+
+        document.getElementById("pendingCount").innerText = pendingCounter;
+    }
+
+    function markAsCompleted(index) {
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        if (history[index]) {
+            history[index].status = "Đã xử lý";
+            localStorage.setItem('viper_history', JSON.stringify(history));
+            renderAdminHistory();
+        }
+    }
+
+    function clearHistory() {
+        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử đơn hàng không?")) {
+            localStorage.removeItem('viper_history');
+            renderAdminHistory();
+        }
+    }
+
+    window.onload = function() {
+        renderAdminHistory();
+    };
+</script>
+
+</body>
+</html>
