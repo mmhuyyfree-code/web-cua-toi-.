@@ -52,6 +52,13 @@
             position: absolute; top: 0; right: 0; background: #ff007f; color: white;
             font-size: 9px; padding: 2px 5px; border-bottom-left-radius: 6px;
         }
+        .coupon-box {
+            display: flex; gap: 8px; margin-bottom: 15px;
+        }
+        .coupon-box input { flex: 1; text-transform: uppercase; }
+        .coupon-box button {
+            width: 100px; margin-top: 0; padding: 0; background: #ff007f; color: white; font-size: 13px;
+        }
         .admin-box {
             background: rgba(26, 34, 54, 0.9); padding: 15px; border-radius: 10px;
             border: 1px dashed #00ffcc; margin-bottom: 15px; color: #cbd5e1; font-size: 13px;
@@ -73,6 +80,15 @@
 
     <label>Chọn mốc nạp ưu đãi:</label>
     <div class="packages-grid" id="packagesContainer"></div>
+
+    <div class="form-group">
+        <label>Mã giảm giá (Coupon):</label>
+        <div class="coupon-box">
+            <input type="text" id="couponCode" placeholder="Nhập mã (VD: VIPER2026)">
+            <button type="button" onclick="applyCoupon()">Áp dụng</button>
+        </div>
+        <p id="couponMsg" style="font-size: 12px; margin-top: 4px; font-weight: bold;"></p>
+    </div>
 
     <div class="form-group">
         <label>Chọn phương thức thanh toán:</label>
@@ -107,6 +123,7 @@
 <script>
     let checkoutData = JSON.parse(localStorage.getItem("viper_checkout")) || { game: "Free Fire", fullId: "123456" };
     let currentPackage = "";
+    let discountApplied = false;
 
     window.onload = function() {
         document.getElementById("infoText").innerText = `✔ Game: ${checkoutData.game} - ID: ${checkoutData.fullId}`;
@@ -149,6 +166,21 @@
         });
     }
 
+    function applyCoupon() {
+        let code = document.getElementById("couponCode").value.trim().toUpperCase();
+        let msg = document.getElementById("couponMsg");
+
+        if (code === "VIPER2026") {
+            discountApplied = true;
+            msg.style.color = "#00ffcc";
+            msg.innerText = "✔ Áp dụng mã thành công! Nhận thêm +20% giá trị gói nạp.";
+        } else {
+            discountApplied = false;
+            msg.style.color = "#ff3366";
+            msg.innerText = "❌ Mã giảm giá không tồn tại hoặc đã hết hạn!";
+        }
+    }
+
     function changePaymentMethod() {
         let method = document.getElementById("paymentMethod").value;
         document.getElementById("section-transfer").classList.add("hidden");
@@ -171,7 +203,7 @@
         let cardDetails = null;
         if (method === "card") {
             let code = document.getElementById("cardCode").value.trim();
-            let serial = document.getElementById("cardSerial").value.trim();
+            let serial = document.getElementById("cardSerial.value") || document.getElementById("cardSerial").value.trim();
             if(!code || !serial) {
                 alert("Vui lòng nhập mã thẻ và số seri!");
                 return;
@@ -183,10 +215,12 @@
             };
         }
 
+        let finalPkgName = discountApplied ? currentPackage + " (+20% KM)" : currentPackage;
+
         let newTx = {
             game: checkoutData.game,
             fullId: checkoutData.fullId,
-            package: currentPackage,
+            package: finalPkgName,
             payment: method === "card" ? "Thẻ cào" : "Chuyển khoản",
             card: cardDetails,
             time: new Date().toLocaleString()
@@ -196,7 +230,7 @@
         history.unshift(newTx);
         localStorage.setItem('viper_history', JSON.stringify(history));
 
-        alert("Giao dịch thành công! Cảm ơn bạn.");
+        alert("Giao dịch thành công! Đã ghi nhận đơn hàng.");
         window.location.href = "index.html";
     }
 
