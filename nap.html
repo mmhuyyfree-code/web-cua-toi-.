@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Toán - VIPER SHOP</title>
+    <style>
+        body {
+            background: #0b0f19 url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.9); z-index: -1;
+        }
+        .container {
+            background: rgba(18, 24, 38, 0.95);
+            width: 100%; max-width: 480px; padding: 25px;
+            border-radius: 16px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+            border: 2px solid #00ffcc; box-sizing: border-box;
+        }
+        h2 {
+            text-align: center; margin-bottom: 20px; font-size: 20px; color: #ffffff;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+        .info-box {
+            background: rgba(26, 34, 54, 0.9); border: 1px solid #2a3b6c;
+            border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 14px; color: #e2e8f0;
+            line-height: 1.6;
+        }
+        .info-box b { color: #00ffcc; }
+        
+        /* Kiểu cho dòng chứa nút Copy nhanh */
+        .copy-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin: 8px 0; background: rgba(11, 15, 25, 0.6); padding: 8px 12px;
+            border-radius: 6px; border: 1px dashed #2a3b6c;
+        }
+        .copy-btn {
+            background: linear-gradient(135deg, #00ffcc, #00bfff);
+            color: #0b0f19; border: none; padding: 5px 12px; border-radius: 4px;
+            font-size: 11px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3); transition: 0.2s;
+        }
+        .copy-btn:active { transform: scale(0.95); }
+
+        .qr-container {
+            text-align: center; margin-bottom: 20px;
+        }
+        .qr-container img {
+            width: 180px; height: 180px; border-radius: 10px;
+            border: 3px solid #00ffcc; padding: 5px; background: #ffffff;
+        }
+        .btn-group {
+            display: flex; gap: 10px;
+        }
+        button.main-btn {
+            flex: 1; background: linear-gradient(135deg, #ff007f, #7928ca);
+            color: #ffffff; border: none; padding: 12px; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+        }
+        .btn-back {
+            background: #2a3b6c; color: #ffffff; box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>💳 THÔNG TIN THANH TOÁN</h2>
+
+    <div class="info-box" id="paymentDetails">
+        Đang tải thông tin đơn hàng...
+    </div>
+
+    <div class="qr-container" id="qrSection" style="display: none;">
+        <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">Quét mã QR để thanh toán nhanh:</div>
+        <img id="qrImage" src="" alt="Mã QR Chuyển Khoản">
+    </div>
+
+    <div class="btn-group">
+        <button type="button" class="main-btn btn-back" onclick="goBack()">⬅ QUAY LẠI</button>
+        <button type="button" class="main-btn" onclick="confirmPayment()">✅ ĐÃ HOÀN TẤT THANH TOÁN</button>
+    </div>
+</div>
+
+<script>
+    let orderData = null;
+
+    window.onload = function() {
+        let dataStr = localStorage.getItem('viper_pending_order');
+        if (!dataStr) {
+            alert("Không tìm thấy thông tin đơn hàng!");
+            window.location.href = "index.html";
+            return;
+        }
+        orderData = JSON.parse(dataStr);
+        renderPaymentInfo();
+    };
+
+    function renderPaymentInfo() {
+        let box = document.getElementById("paymentDetails");
+        let qrSection = document.getElementById("qrSection");
+        let qrImage = document.getElementById("qrImage");
+
+        let html = `
+            🎮 <b>Game:</b> ${orderData.game}<br>
+            📦 <b>Gói nạp:</b> ${orderData.package} (${orderData.priceText})<br>
+            👤 <b>Tài khoản/ID:</b> <span style="color:#ffffff;">${orderData.fullId}</span><br>
+            💳 <b>Phương thức:</b> <span style="color:#ff007f;">${orderData.payment}</span><br><hr style="border:0; border-top:1px solid #2a3b6c; margin:10px 0;">
+        `;
+
+        if (orderData.payment === "Chuyển khoản Ngân hàng") {
+            let stk = "10587654321";
+            let bank = "MB Bank";
+            let owner = "TRAN MINH HUY";
+            let content = "VIPER " + Math.floor(100000 + Math.random() * 900000);
+
+            html += `
+                🏦 <b>Ngân hàng:</b> ${bank}<br>
+                <div class="copy-row">
+                    <span>STK: <b id="stkVal" style="color:#00ffcc;">${stk}</b></span>
+                    <button class="copy-btn" onclick="copyText('stkVal')">📋 COPY STK</button>
+                </div>
+                👤 <b>Chủ TK:</b> ${owner}<br>
+                <div class="copy-row">
+                    <span>Nội dung: <b id="contentVal" style="color:#ff007f;">${content}</b></span>
+                    <button class="copy-btn" onclick="copyText('contentVal')">📋 COPY NỘI DUNG</button>
+                </div>
+                <div style="font-size:11px; color:#f59e0b; margin-top:5px;">⚠️ Vui lòng chuyển đúng nội dung để hệ thống tự động duyệt!</div>
+            `;
+
+            // Tạo link VietQR tự động
+            let qrUrl = `https://img.vietqr.io/image/MB-${stk}-compact2.png?amount=0&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(owner)}`;
+            qrImage.src = qrUrl;
+            qrSection.style.display = "block";
+
+        } else if (orderData.payment === "Ví MoMo") {
+            let momoPhone = "0987654321";
+            let momoOwner = "TRAN MINH HUY";
+            let momoContent = "VIPER " + Math.floor(100000 + Math.random() * 900000);
+
+            html += `
+                📱 <b>Ví MoMo:</b> Ví điện tử<br>
+                <div class="copy-row">
+                    <span>Số điện thoại: <b id="momoVal" style="color:#00ffcc;">${momoPhone}</b></span>
+                    <button class="copy-btn" onclick="copyText('momoVal')">📋 COPY SĐT</button>
+                </div>
+                👤 <b>Chủ tài khoản:</b> ${momoOwner}<br>
+                <div class="copy-row">
+                    <span>Nội dung: <b id="momoContentVal" style="color:#ff007f;">${momoContent}</b></span>
+                    <button class="copy-btn" onclick="copyText('momoContentVal')">📋 COPY NỘI DUNG</button>
+                </div>
+                <div style="font-size:11px; color:#f59e0b; margin-top:5px;">⚠️ Chuyển đúng nội dung để hoàn tất giao dịch!</div>
+            `;
+        } else {
+            // Thẻ cào
+            html += `
+                <div style="margin-bottom: 8px;">Nhập thông tin thẻ cào của bạn:</div>
+                <div style="margin-bottom: 6px;">
+                    <select id="cardType" style="width:100%; padding:8px; border-radius:6px; background:#0b0f19; color:#fff; border:1px solid #2a3b6c;">
+                        <option value="Viettel">Viettel</option>
+                        <option value="Mobifone">Mobifone</option>
+                        <option value="Vinaphone">Vinaphone</option>
+                        <option value="Vietnamobile">Vietnamobile</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <input type="text" id="cardPrice" value="${orderData.priceText}" readonly style="width:100%; padding:8px; border-radius:6px; background:#0b0f19; color:#00ffcc; border:1px solid #2a3b6c; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <input type="text" id="cardCode" placeholder="Nhập mã thẻ cào..." style="width:100%; padding:8px; border-radius:6px; background:#0b0f19; color:#fff; border:1px solid #2a3b6c; box-sizing:border-box;">
+                </div>
+                <div>
+                    <input type="text" id="cardSerial" placeholder="Nhập số seri thẻ..." style="width:100%; padding:8px; border-radius:6px; background:#0b0f19; color:#fff; border:1px solid #2a3b6c; box-sizing:border-box;">
+                </div>
+            `;
+        }
+
+        box.innerHTML = html;
+    }
+
+    // Hàm sao chép nhanh
+    function copyText(elementId) {
+        let textToCopy = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("Đã sao chép: " + textToCopy);
+        }).catch(err => {
+            console.error("Không thể copy: ", err);
+        });
+    }
+
+    function confirmPayment() {
+        let finalOrder = {
+            game: orderData.game,
+            package: orderData.package + " (" + orderData.priceText + ")",
+            fullId: orderData.fullId,
+            payment: orderData.payment,
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        if (orderData.payment === "Thẻ cào") {
+            let cType = document.getElementById("cardType").value;
+            let cPrice = document.getElementById("cardPrice").value;
+            let cCode = document.getElementById("cardCode").value.trim();
+            let cSerial = document.getElementById("cardSerial").value.trim();
+
+            if (!cCode || !cSerial) {
+                alert("Vui lòng nhập đầy đủ mã thẻ và số seri!");
+                return;
+            }
+            finalOrder.card = { cardType: cType, cardPrice: cPrice, cardCode: cCode, cardSerial: cSerial };
+        }
+
+        // Lưu vào lịch sử chung để hiện ở trang quản trị
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        history.unshift(finalOrder);
+        localStorage.setItem('viper_history', JSON.stringify(history));
+
+        alert("Giao dịch của bạn đã được ghi nhận! Hệ thống đang xử lý đơn hàng.");
+        localStorage.removeItem('viper_pending_order');
+        window.location.href = "index.html";
+    }
+
+    function goBack() {
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>
