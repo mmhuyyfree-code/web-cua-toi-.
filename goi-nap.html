@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Gói Nạp - VIPER SHOP</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: rgba(18, 24, 38, 0.95); padding: 10px 15px; border-bottom: 1px solid #2a3b6c; margin-bottom: 20px; border-radius: 8px; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: bold; }
+        .nav-links a:hover, .nav-links a.active { color: #00ffcc; }
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .game-btn { background: rgba(26, 34, 54, 0.9); border: 1px solid #2a3b6c; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; transition: 0.2s; }
+        .game-btn:hover, .game-btn.selected { border-color: #00ffcc; background: rgba(0, 255, 204, 0.1); color: #00ffcc; }
+        .package-item { background: rgba(26, 34, 54, 0.7); border: 1px solid #2a3b6c; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .package-item:hover, .package-item.selected { border-color: #ff007f; background: rgba(255, 0, 127, 0.1); }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 500px;">
+    <div class="navbar">
+        <div class="nav-links">
+            <a href="index.html">Trang Chủ</a>
+            <a href="goi-nap.html" class="active">Gói Nạp</a>
+            <a href="nap-tien.html">Nạp Ví</a>
+            <a href="lich-su.html">Lịch Sử</a>
+        </div>
+        <div id="authArea" style="font-size: 12px;">
+            <div id="authLogged">
+                <span id="loggedUser" style="color: #00ffcc; font-weight: bold;"></span> 
+                (<span id="loggedBalance" style="color: #ffaa00;">0đ</span>)
+            </div>
+        </div>
+    </div>
+
+    <h2>CHỌN GÓI NẠP GAME</h2>
+
+    <div class="form-group">
+        <label>1. Chọn Tựa Game:</label>
+        <div class="game-grid">
+            <div class="game-btn selected" onclick="selectGame('Liên Quân Mobile', this)">Liên Quân Mobile</div>
+            <div class="game-btn" onclick="selectGame('Free Fire', this)">Free Fire</div>
+            <div class="game-btn" onclick="selectGame('Roblox', this)">Roblox</div>
+            <div class="game-btn" onclick="selectGame('Tốc Chiến', this)">Tốc Chiến</div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>2. Nhập ID Nhân Vật / Tài Khoản:</label>
+        <input type="text" id="gameId" placeholder="Nhập ID trong game của bạn...">
+    </div>
+
+    <div class="form-group">
+        <label>3. Chọn Gói Nạp:</label>
+        <div id="packageList">
+            <div class="package-item selected" onclick="selectPackage('Gói Sơ Cấp - 50,000đ', 50000, this)">
+                <span>Gói Sơ Cấp</span>
+                <b style="color: #00ffcc;">50,000đ</b>
+            </div>
+            <div class="package-item" onclick="selectPackage('Gói Trung Cấp - 100,000đ', 100000, this)">
+                <span>Gói Trung Cấp</span>
+                <b style="color: #00ffcc;">100,000đ</b>
+            </div>
+            <div class="package-item" onclick="selectPackage('Gói Cao Cấp - 200,000đ', 200000, this)">
+                <span>Gói Cao Cấp</span>
+                <b style="color: #00ffcc;">200,000đ</b>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="submitOrder()" style="background: linear-gradient(135deg, #00ffcc, #0072ff); color: #0b0f19; font-weight: bold; margin-top: 10px;">XÁC NHẬN NẠP NGAY</button>
+</div>
+
+<script>
+    let selectedGame = "Liên Quân Mobile";
+    let selectedPkgName = "Gói Sơ Cấp - 50,000đ";
+    let selectedPkgPrice = 50000;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        if (!currentUser) {
+            alert("Vui lòng đăng nhập trước khi mua gói nạp!");
+            window.location.href = "login.html";
+            return;
+        }
+        document.getElementById("loggedUser").innerText = currentUser.username;
+        document.getElementById("loggedBalance").innerText = Number(currentUser.balance || 0).toLocaleString('vi-VN') + "đ";
+    });
+
+    function selectGame(gameName, element) {
+        selectedGame = gameName;
+        document.querySelectorAll('.game-btn').forEach(btn => btn.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function selectPackage(pkgName, price, element) {
+        selectedPkgName = pkgName;
+        selectedPkgPrice = price;
+        document.querySelectorAll('.package-item').forEach(item => item.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function submitOrder() {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        let fullId = document.getElementById("gameId").value.trim();
+
+        if (!fullId) {
+            alert("Vui lòng nhập ID nhân vật trong game!");
+            return;
+        }
+
+        let currentBalance = Number(currentUser.balance || 0);
+        if (currentBalance < selectedPkgPrice) {
+            alert("Số dư ví không đủ! Vui lòng vào mục 'Nạp Ví' để nạp thêm.");
+            window.location.href = "nap-tien.html";
+            return;
+        }
+
+        // Trừ tiền ví tạm thời chờ admin duyệt
+        currentUser.balance = currentBalance - selectedPkgPrice;
+        localStorage.setItem('viper_current_user', JSON.stringify(currentUser));
+
+        let users = JSON.parse(localStorage.getItem('viper_users')) || [];
+        let uIndex = users.findIndex(u => u.username === currentUser.username);
+        if (uIndex !== -1) {
+            users[uIndex].balance = currentUser.balance;
+            localStorage.setItem('viper_users', JSON.stringify(users));
+        }
+
+        let orderItem = {
+            username: currentUser.username,
+            game: selectedGame,
+            fullId: fullId,
+            package: selectedPkgName,
+            payment: "Số dư ví",
+            status: "Chờ xử lý",
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        history.unshift(orderItem);
+        localStorage.setItem('viper_history', JSON.stringify(history));
+
+        alert("Gửi đơn hàng thành công! Đang chờ Admin xét duyệt.");
+        window.location.href = "lich-su.html";
+    }
+</script>
+
+</body>
+</html>
