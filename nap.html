@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Toán - VIPER SHOP</title>
+    <!-- Thư viện pháo hoa Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            background: #0b0f19 url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.9); z-index: -1;
+        }
+        .container {
+            background: rgba(18, 24, 38, 0.95);
+            width: 100%; max-width: 450px; padding: 25px;
+            border-radius: 16px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+            border: 2px solid #00ffcc; box-sizing: border-box;
+            position: relative; z-index: 10;
+        }
+        h2 {
+            text-align: center; margin-bottom: 15px; font-size: 22px; color: #ffffff;
+        }
+        .success-text {
+            color: #00ffcc; font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 13px;
+        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; color: #e2e8f0; font-weight: 600; font-size: 13px; }
+        select, input {
+            width: 100%; padding: 12px; background: rgba(11, 15, 25, 0.9);
+            border: 1px solid #2a3b6c; border-radius: 8px; box-sizing: border-box;
+            color: #ffffff; font-size: 14px; outline: none;
+        }
+        .filter-box {
+            display: flex; gap: 6px; margin-bottom: 10px;
+        }
+        .filter-btn {
+            flex: 1; background: rgba(26, 34, 54, 0.9); border: 1px solid #2a3b6c;
+            color: #cbd5e1; padding: 6px; border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; font-weight: bold;
+        }
+        .filter-btn.active {
+            background: #00ffcc; color: #0b0f19; border-color: #00ffcc;
+        }
+        .packages-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;
+        }
+        .package-btn {
+            background: rgba(26, 34, 54, 0.9); border: 2px solid #2a3b6c; color: #e2e8f0;
+            padding: 10px 8px; border-radius: 10px; text-align: center; cursor: pointer;
+            font-weight: 700; font-size: 12px; position: relative;
+        }
+        .package-btn.selected {
+            background: linear-gradient(135deg, #00ffcc, #0072ff); border-color: #00ffcc;
+            color: #0b0f19; box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+        }
+        .badge-hot {
+            position: absolute; top: 0; right: 0; background: #ff007f; color: white;
+            font-size: 9px; padding: 2px 5px; border-bottom-left-radius: 6px;
+        }
+        .coupon-box {
+            display: flex; gap: 8px; margin-bottom: 15px;
+        }
+        .coupon-box input { flex: 1; text-transform: uppercase; }
+        .coupon-box button {
+            width: 100px; margin-top: 0; padding: 0; background: #ff007f; color: white; font-size: 13px;
+        }
+        .admin-box {
+            background: rgba(26, 34, 54, 0.9); padding: 15px; border-radius: 10px;
+            border: 1px dashed #00ffcc; margin-bottom: 15px; color: #cbd5e1; font-size: 13px;
+        }
+        .copy-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin: 6px 0; background: rgba(11, 15, 25, 0.8); padding: 6px 10px;
+            border-radius: 6px; border: 1px dashed #2a3b6c; font-size: 12px;
+        }
+        .copy-btn {
+            background: linear-gradient(135deg, #00ffcc, #00bfff);
+            color: #0b0f19; border: none; padding: 4px 10px; border-radius: 4px;
+            font-size: 10px; font-weight: bold; cursor: pointer;
+        }
+        button {
+            width: 100%; background: linear-gradient(135deg, #00ffcc, #00bfff);
+            color: #0b0f19; border: none; padding: 14px; border-radius: 8px;
+            font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>CHỌN GÓI NẠP & THANH TOÁN</h2>
+    <div class="success-text" id="infoText">Đang tải thông tin...</div>
+
+    <div style="margin-bottom: 6px;"><label style="margin-bottom: 0;">Chọn mốc nạp ưu đãi:</label></div>
+    
+    <div class="filter-box">
+        <div class="filter-btn active" onclick="filterPackages('all', this)">Tất cả</div>
+        <div class="filter-btn" onclick="filterPackages('small', this)">≤ 50K (Nhỏ)</div>
+        <div class="filter-btn" onclick="filterPackages('large', this)">> 50K (Lớn)</div>
+    </div>
+
+    <div class="packages-grid" id="packagesContainer"></div>
+
+    <div class="form-group">
+        <label>Mã giảm giá (Coupon):</label>
+        <div class="coupon-box">
+            <input type="text" id="couponCode" placeholder="Nhập mã (VD: VIPER2026)">
+            <button type="button" onclick="applyCoupon()">Áp dụng</button>
+        </div>
+        <p id="couponMsg" style="font-size: 12px; margin-top: 4px; font-weight: bold;"></p>
+    </div>
+
+    <div class="form-group">
+        <label>Chọn phương thức thanh toán:</label>
+        <select id="paymentMethod" onchange="changePaymentMethod()">
+            <option value="">-- Chọn hình thức --</option>
+            <option value="transfer">Chuyển khoản ngân hàng (Auto)</option>
+            <option value="card">Thẻ cào điện thoại</option>
+        </select>
+    </div>
+
+    <div id="section-transfer" class="hidden">
+        <div class="admin-box">
+            <p style="margin: 4px 0;"><strong>Ngân hàng:</strong> MB Bank</p>
+            <div class="copy-row">
+                <span>STK: <b id="stkVal" style="color: #00ffcc;">8877945567</b></span>
+                <button type="button" class="copy-btn" onclick="copyText('stkVal')">📋 COPY</button>
+            </div>
+            <p style="margin: 4px 0;"><strong>Chủ TK:</strong> VI THI HA</p>
+            <div class="copy-row">
+                <span>Nội dung: <b id="transferSyntax" style="color: #00ffcc;">NAP</b></span>
+                <button type="button" class="copy-btn" onclick="copyText('transferSyntax')">📋 COPY</button>
+            </div>
+        </div>
+        <button type="button" onclick="finishOrder()">XÁC NHẬN ĐÃ CHUYỂN KHOẢN</button>
+    </div>
+
+    <div id="section-card" class="hidden">
+        <div class="form-group"><label>Loại thẻ:</label><select id="cardType"><option value="Viettel">Viettel</option><option value="Vinaphone">Vinaphone</option><option value="Mobifone">Mobifone</option></select></div>
+        <div class="form-group"><label>Mệnh giá:</label><select id="cardPrice"><option value="10k">10.000 VNĐ</option><option value="20k">20.000 VNĐ</option><option value="50k">50.000 VNĐ</option><option value="100k">100.000 VNĐ</option><option value="200k">200.000 VNĐ</option><option value="500k">500.000 VNĐ</option></select></div>
+        <div class="form-group"><label>Mã thẻ:</label><input type="text" id="cardCode" placeholder="Nhập mã thẻ..."></div>
+        <div class="form-group"><label>Số Seri:</label><input type="text" id="cardSerial" placeholder="Nhập số seri..."></div>
+        <button type="button" onclick="finishOrder()">XÁC NHẬN NẠP THẺ</button>
+    </div>
+
+    <button type="button" onclick="goBack()" style="background: #2a3b6c; color: #ffffff; margin-top: 8px;">⬅ QUAY LẠI TRANG CHỦ</button>
+</div>
+
+<script>
+    let checkoutData = JSON.parse(localStorage.getItem("viper_checkout"));
+    let currentPackage = "";
+    let discountApplied = false;
+    let allPkgs = [];
+
+    window.onload = function() {
+        if (!checkoutData) {
+            alert("Không tìm thấy thông tin đơn hàng! Vui lòng nhập lại ID.");
+            window.location.href = "index.html";
+            return;
+        }
+        document.getElementById("infoText").innerText = `✔ Game: ${checkoutData.game} - ID: ${checkoutData.fullId}`;
+        loadPackagesData(checkoutData.game);
+        renderPackages(allPkgs);
+        document.getElementById("transferSyntax").innerText = "NAP " + checkoutData.fullId;
+    };
+
+    // Âm thanh chiến thắng hoành tráng
+    function playSuccessSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+
+            const playNote = (freq, startTime, duration) => {
+                let osc = ctx.createOscillator();
+                let oscHarmonic = ctx.createOscillator();
+                let gainNode = ctx.createGain();
+
+                osc.type = 'sine';
+                oscHarmonic.type = 'triangle';
+
+                osc.frequency.setValueAtTime(freq, startTime);
+                oscHarmonic.frequency.setValueAtTime(freq * 1.5, startTime);
+
+                gainNode.gain.setValueAtTime(0.6, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                osc.connect(gainNode);
+                oscHarmonic.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                osc.start(startTime);
+                oscHarmonic.start(startTime);
+                osc.stop(startTime + duration);
+                oscHarmonic.stop(startTime + duration);
+            };
+
+            let now = ctx.currentTime;
+            playNote(523.25, now, 0.35);        // C5
+            playNote(659.25, now + 0.12, 0.35);  // E5
+            playNote(783.99, now + 0.24, 0.45);  // G5
+            playNote(1046.50, now + 0.36, 0.8);  // C6
+
+        } catch (e) {
+            console.log("Audio error", e);
+        }
+    }
+
+    // Hiệu ứng pháo hoa rực rỡ chúc mừng
+    function triggerFireworks() {
+        var duration = 1.5 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 99999 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    }
+
+    function loadPackagesData(game) {
+        if (game === 'Free Fire') {
+            allPkgs = [
+                {name: '10k = 110💎', price: 10}, {name: '20k = 230💎', price: 20},
+                {name: '50k = 600💎', price: 50, hot: true}, {name: '100k = 1300💎', price: 100, hot: true}
+            ];
+        } else if (game === 'Liên Quân') {
+            allPkgs = [
+                {name: '20k = 90 QH', price: 20}, {name: '50k = 230 QH', price: 50, hot: true},
+                {name: '100k = 480 QH', price: 100}, {name: '200k = 1000 QH', price: 200, hot: true}
+            ];
+        } else if (game === 'Roblox') {
+            allPkgs = [
+                {name: '20k = 160 Robux', price: 20}, {name: '50k = 400 Robux', price: 50},
+                {name: '100k = 850 Robux', price: 100, hot: true}, {name: '200k = 1800 Robux', price: 200, hot: true}
+            ];
+        }
+    }
+
+    function renderPackages(pkgs) {
+        let container = document.getElementById("packagesContainer");
+        container.innerHTML = "";
+
+        pkgs.forEach(pkg => {
+            let div = document.createElement("div");
+            div.className = "package-btn";
+            div.innerHTML = `${pkg.name} ${pkg.hot ? '<span class="badge-hot">HOT</span>' : ''}`;
+            if(currentPackage === pkg.name) div.classList.add("selected");
+            
+            div.onclick = function() {
+                document.querySelectorAll(".package-btn").forEach(b => b.classList.remove("selected"));
+                div.classList.add("selected");
+                currentPackage = pkg.name;
+            };
+            container.appendChild(div);
+        });
+    }
+
+    function filterPackages(type, el) {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        el.classList.add("active");
+
+        if (type === 'all') {
+            renderPackages(allPkgs);
+        } else if (type === 'small') {
+            let filtered = allPkgs.filter(p => p.price <= 50);
+            renderPackages(filtered);
+        } else if (type === 'large') {
+            let filtered = allPkgs.filter(p => p.price > 50);
+            renderPackages(filtered);
+        }
+    }
+
+    function applyCoupon() {
+        let code = document.getElementById("couponCode").value.trim().toUpperCase();
+        let msg = document.getElementById("couponMsg");
+
+        if (code === "VIPER2026") {
+            discountApplied = true;
+            msg.style.color = "#00ffcc";
+            msg.innerText = "✔ Áp dụng mã thành công! Nhận thêm +20% giá trị gói nạp.";
+        } else {
+            discountApplied = false;
+            msg.style.color = "#ff3366";
+            msg.innerText = "❌ Mã giảm giá không tồn tại hoặc đã hết hạn!";
+        }
+    }
+
+    function changePaymentMethod() {
+        let method = document.getElementById("paymentMethod").value;
+        document.getElementById("section-transfer").classList.add("hidden");
+        document.getElementById("section-card").classList.add("hidden");
+        if (method === "transfer") document.getElementById("section-transfer").classList.remove("hidden");
+        if (method === "card") document.getElementById("section-card").classList.remove("hidden");
+    }
+
+    function copyText(elementId) {
+        let text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Đã sao chép: " + text);
+        });
+    }
+
+    function finishOrder() {
+        if (!currentPackage) {
+            alert("Vui lòng chọn mốc nạp!");
+            return;
+        }
+        let method = document.getElementById("paymentMethod").value;
+        if (!method) {
+            alert("Vui lòng chọn hình thức thanh toán!");
+            return;
+        }
+
+        let cardDetails = null;
+        if (method === "card") {
+            let code = document.getElementById("cardCode").value.trim();
+            let serial = document.getElementById("cardSerial").value.trim();
+            if(!code || !serial) {
+                alert("Vui lòng nhập mã thẻ và số seri!");
+                return;
+            }
+            cardDetails = {
+                cardType: document.getElementById("cardType").value,
+                cardPrice: document.getElementById("cardPrice").value,
+                cardCode: code, cardSerial: serial
+            };
+        }
+
+        let finalPkgName = discountApplied ? currentPackage + " (+20% KM)" : currentPackage;
+
+        let newTx = {
+            game: checkoutData.game,
+            fullId: checkoutData.fullId,
+            package: finalPkgName,
+            payment: method === "card" ? "Thẻ cào" : "Chuyển khoản",
+            card: cardDetails,
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        history.unshift(newTx);
+        localStorage.setItem('viper_history', JSON.stringify(history));
+
+        // Kích hoạt âm thanh ngân vang + pháo hoa rực rỡ
+        playSuccessSound();
+        triggerFireworks();
+
+        setTimeout(() => {
+            alert("Giao dịch thành công! Đã ghi nhận đơn hàng.");
+            localStorage.removeItem('viper_checkout');
+            window.location.href = "index.html";
+        }, 1500); // Tăng thời gian chờ một chút để người chơi kịp ngắm pháo hoa
+    }
+
+    function goBack() {
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>
