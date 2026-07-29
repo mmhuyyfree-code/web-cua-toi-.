@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh Toán - VIPER SHOP</title>
+    <style>
+        body {
+            background: #0b0f19 url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.85); z-index: -1;
+        }
+        .container {
+            background: rgba(18, 24, 38, 0.95);
+            width: 100%; max-width: 450px; padding: 25px;
+            border-radius: 16px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+            border: 2px solid #00ffcc; box-sizing: border-box;
+        }
+        h2 {
+            text-align: center; margin-bottom: 15px; font-size: 22px; color: #ffffff;
+        }
+        .success-text {
+            color: #00ffcc; font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 13px;
+        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; color: #e2e8f0; font-weight: 600; font-size: 13px; }
+        select, input {
+            width: 100%; padding: 12px; background: rgba(11, 15, 25, 0.9);
+            border: 1px solid #2a3b6c; border-radius: 8px; box-sizing: border-box;
+            color: #ffffff; font-size: 14px; outline: none;
+        }
+        .packages-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;
+        }
+        .package-btn {
+            background: rgba(26, 34, 54, 0.9); border: 2px solid #2a3b6c; color: #e2e8f0;
+            padding: 10px 8px; border-radius: 10px; text-align: center; cursor: pointer;
+            font-weight: 700; font-size: 12px; position: relative;
+        }
+        .package-btn.selected {
+            background: linear-gradient(135deg, #00ffcc, #0072ff); border-color: #00ffcc;
+            color: #0b0f19; box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+        }
+        .badge-hot {
+            position: absolute; top: 0; right: 0; background: #ff007f; color: white;
+            font-size: 9px; padding: 2px 5px; border-bottom-left-radius: 6px;
+        }
+        .admin-box {
+            background: rgba(26, 34, 54, 0.9); padding: 15px; border-radius: 10px;
+            border: 1px dashed #00ffcc; margin-bottom: 15px; color: #cbd5e1; font-size: 13px;
+        }
+        button {
+            width: 100%; background: linear-gradient(135deg, #00ffcc, #00bfff);
+            color: #0b0f19; border: none; padding: 14px; border-radius: 8px;
+            font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>CHỌN GÓI NẠP & THANH TOÁN</h2>
+    <div class="success-text" id="infoText">Đang tải thông tin...</div>
+
+    <label>Chọn mốc nạp ưu đãi:</label>
+    <div class="packages-grid" id="packagesContainer"></div>
+
+    <div class="form-group">
+        <label>Chọn phương thức thanh toán:</label>
+        <select id="paymentMethod" onchange="changePaymentMethod()">
+            <option value="">-- Chọn hình thức --</option>
+            <option value="transfer">Chuyển khoản ngân hàng (Auto)</option>
+            <option value="card">Thẻ cào điện thoại</option>
+        </select>
+    </div>
+
+    <div id="section-transfer" class="hidden">
+        <div class="admin-box">
+            <p><strong>Ngân hàng:</strong> BIDV</p>
+            <p><strong>STK:</strong> 8877945567</p>
+            <p><strong>Chủ TK:</strong> VI THI HA</p>
+            <p><strong>Nội dung:</strong> <span id="transferSyntax" style="color: #00ffcc; font-weight: bold;">NAP_GAME</span></p>
+        </div>
+        <button type="button" onclick="finishOrder()">XÁC NHẬN ĐÃ CHUYỂN KHOẢN</button>
+    </div>
+
+    <div id="section-card" class="hidden">
+        <div class="form-group"><label>Loại thẻ:</label><select id="cardType"><option value="Viettel">Viettel</option><option value="Vinaphone">Vinaphone</option><option value="Mobifone">Mobifone</option></select></div>
+        <div class="form-group"><label>Mệnh giá:</label><select id="cardPrice"><option value="10k">10.000 VNĐ</option><option value="20k">20.000 VNĐ</option><option value="50k">50.000 VNĐ</option><option value="100k">100.000 VNĐ</option><option value="200k">200.000 VNĐ</option><option value="500k">500.000 VNĐ</option></select></div>
+        <div class="form-group"><label>Mã thẻ:</label><input type="text" id="cardCode" placeholder="Nhập mã thẻ..."></div>
+        <div class="form-group"><label>Số Seri:</label><input type="text" id="cardSerial" placeholder="Nhập số seri..."></div>
+        <button type="button" onclick="finishOrder()">XÁC NHẬN NẠP THẺ</button>
+    </div>
+
+    <button type="button" onclick="goBack()" style="background: #2a3b6c; color: #ffffff; margin-top: 8px;">⬅ QUAY LẠI TRANG CHỦ</button>
+</div>
+
+<script>
+    let checkoutData = JSON.parse(localStorage.getItem("viper_checkout")) || { game: "Free Fire", fullId: "123456" };
+    let currentPackage = "";
+
+    window.onload = function() {
+        document.getElementById("infoText").innerText = `✔ Game: ${checkoutData.game} - ID: ${checkoutData.fullId}`;
+        renderPackages(checkoutData.game);
+        document.getElementById("transferSyntax").innerText = "NAP " + checkoutData.fullId;
+    };
+
+    function renderPackages(game) {
+        let container = document.getElementById("packagesContainer");
+        container.innerHTML = "";
+        let pkgs = [];
+
+        if (game === 'Free Fire') {
+            pkgs = [
+                {name: '10k = 110💎'}, {name: '20k = 230💎'},
+                {name: '50k = 600💎', hot: true}, {name: '100k = 1300💎', hot: true}
+            ];
+        } else if (game === 'Liên Quân') {
+            pkgs = [
+                {name: '20k = 90 QH'}, {name: '50k = 230 QH', hot: true},
+                {name: '100k = 480 QH'}, {name: '200k = 1000 QH', hot: true}
+            ];
+        } else if (game === 'Roblox') {
+            pkgs = [
+                {name: '20k = 160 Robux'}, {name: '50k = 400 Robux'},
+                {name: '100k = 850 Robux', hot: true}, {name: '200k = 1800 Robux', hot: true}
+            ];
+        }
+
+        pkgs.forEach(pkg => {
+            let div = document.createElement("div");
+            div.className = "package-btn";
+            div.innerHTML = `${pkg.name} ${pkg.hot ? '<span class="badge-hot">HOT</span>' : ''}`;
+            div.onclick = function() {
+                document.querySelectorAll(".package-btn").forEach(b => b.classList.remove("selected"));
+                div.classList.add("selected");
+                currentPackage = pkg.name;
+            };
+            container.appendChild(div);
+        });
+    }
+
+    function changePaymentMethod() {
+        let method = document.getElementById("paymentMethod").value;
+        document.getElementById("section-transfer").classList.add("hidden");
+        document.getElementById("section-card").classList.add("hidden");
+        if (method === "transfer") document.getElementById("section-transfer").classList.remove("hidden");
+        if (method === "card") document.getElementById("section-card").classList.remove("hidden");
+    }
+
+    function finishOrder() {
+        if (!currentPackage) {
+            alert("Vui lòng chọn mốc nạp!");
+            return;
+        }
+        let method = document.getElementById("paymentMethod").value;
+        if (!method) {
+            alert("Vui lòng chọn hình thức thanh toán!");
+            return;
+        }
+
+        let cardDetails = null;
+        if (method === "card") {
+            let code = document.getElementById("cardCode").value.trim();
+            let serial = document.getElementById("cardSerial").value.trim();
+            if(!code || !serial) {
+                alert("Vui lòng nhập mã thẻ và số seri!");
+                return;
+            }
+            cardDetails = {
+                cardType: document.getElementById("cardType").value,
+                cardPrice: document.getElementById("cardPrice").value,
+                cardCode: code, cardSerial: serial
+            };
+        }
+
+        let newTx = {
+            game: checkoutData.game,
+            fullId: checkoutData.fullId,
+            package: currentPackage,
+            payment: method === "card" ? "Thẻ cào" : "Chuyển khoản",
+            card: cardDetails,
+            time: new Date().toLocaleString()
+        };
+
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        history.unshift(newTx);
+        localStorage.setItem('viper_history', JSON.stringify(history));
+
+        alert("Giao dịch thành công! Cảm ơn bạn.");
+        window.location.href = "index.html";
+    }
+
+    function goBack() {
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>
