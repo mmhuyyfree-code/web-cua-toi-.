@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - VIPER SHOP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container" style="max-width: 400px;">
+    <h2>ĐĂNG KÝ TÀI KHOẢN</h2>
+    <div style="color: #cbd5e1; font-size: 12px; text-align: center; margin-bottom: 15px;">Tạo tài khoản để nhận nhiều ưu đãi thành viên</div>
+
+    <div class="form-group">
+        <label>Tên đăng nhập hoặc Số điện thoại:</label>
+        <input type="text" id="regUser" placeholder="Nhập tài khoản...">
+    </div>
+
+    <div class="form-group">
+        <label>Mật khẩu:</label>
+        <input type="password" id="regPass" placeholder="Nhập mật khẩu...">
+    </div>
+
+    <div class="form-group">
+        <label>Xác nhận mật khẩu:</label>
+        <input type="password" id="regRePass" placeholder="Nhập lại mật khẩu...">
+    </div>
+
+    <button type="button" onclick="handleRegister()" style="background: #ff007f; color: #ffffff; font-weight: bold; margin-top: 10px;">ĐĂNG KÝ NGAY</button>
+
+    <div style="text-align: center; margin-top: 15px; font-size: 12px;">
+        <span style="color: #cbd5e1;">Đã có tài khoản?</span> 
+        <a href="login.html" style="color: #00ffcc; text-decoration: none; font-weight: bold;">Đăng nhập</a>
+    </div>
+
+    <button type="button" onclick="window.location.href='index.html'" style="background: #2a3b6c; color: #ffffff; margin-top: 10px;">⬅ VỀ TRANG CHỦ</button>
+</div>
+
+<script>
+    function handleRegister() {
+        let user = document.getElementById("regUser").value.trim();
+        let pass = document.getElementById("regPass").value.trim();
+        let rePass = document.getElementById("regRePass").value.trim();
+
+        if (!user || !pass || !rePass) {
+            alert("Vui lòng điền đầy đủ thông tin!");
+            return;
+        }
+
+        if (pass !== rePass) {
+            alert("Mật khẩu xác nhận không khớp!");
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('viper_users')) || [];
+        
+        // Kiểm tra xem tài khoản đã tồn tại chưa
+        let existing = users.find(u => u.username === user);
+        if (existing) {
+            alert("Tên đăng nhập hoặc số điện thoại này đã được sử dụng!");
+            return;
+        }
+
+        // Thêm tài khoản mới với số dư ví mặc định = 0đ và phân quyền thành viên
+        let newUser = {
+            username: user,
+            password: pass,
+            balance: 0,
+            role: "member",
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        users.push(newUser);
+        localStorage.setItem('viper_users', JSON.stringify(users));
+
+        alert("Đăng ký tài khoản thành công!");
+        window.location.href = "login.html";
+    }
+</script>
+
+</body>
+      </html>
+  
