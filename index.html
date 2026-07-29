@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Nạp Game Tự Động</title>
+    <!-- Liên kết file CSS chung -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Nhấn đúng 8 lần vào chữ VIPER SHOP để hiện bảng nhập pass (Mã: 30911) -->
+        <h2 onclick="handleAdminClick()" style="cursor: pointer; user-select: none;" title="Khu vực quản trị">⚡ VIPER SHOP ⚡</h2>
+        
+        <div class="form-group">
+            <label for="gameSelect">Chọn Game cần nạp</label>
+            <select id="gameSelect">
+                <option value="Free Fire">Free Fire</option>
+                <option value="Liên Quân">Liên Quân Mobile</option>
+                <option value="Roblox">Roblox</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="playerId">Nhập ID Nhân Vật / Tài Khoản</label>
+            <input type="text" id="playerId" placeholder="Ví dụ: 123456789">
+        </div>
+
+        <button type="button" onclick="goToCheckout()">TIẾP TỤC</button>
+        
+        <!-- Phần hiển thị lịch sử giao dịch gần đây trên trang chủ -->
+        <div class="recent-transactions" style="margin-top: 25px; border-top: 1px dashed rgba(0, 255, 204, 0.3); padding-top: 15px;">
+            <h3 style="font-size: 14px; color: #00ffcc; margin-bottom: 10px; text-align: center;">📜 Giao dịch gần đây</h3>
+            <div id="homeHistoryList" style="font-size: 12px; color: #cbd5e1; max-height: 120px; overflow-y: auto;">
+                <div style="text-align: center; color: #94a3b8; padding: 5px;">Chưa có giao dịch nào gần đây.</div>
+            </div>
+        </div>
+
+        <div class="note" style="margin-top: 15px;">Hệ thống nạp thẻ tự động 24/7 - Uy tín, an toàn, nhanh chóng.</div>
+    </div>
+
+    <!-- Widget hỗ trợ nhanh -->
+    <div class="support-widget">
+        <div class="support-tooltip">💬 Cần hỗ trợ nạp tiền? Chat ngay!</div>
+        <a href="https://zalo.me" target="_blank" class="support-btn" title="Hỗ trợ 24/7">💬</a>
+    </div>
+
+    <script>
+        window.onload = function() {
+            loadHomeHistory();
+        };
+
+        function goToCheckout() {
+            let game = document.getElementById("gameSelect").value;
+            let fullId = document.getElementById("playerId").value.trim();
+            if (!fullId) { 
+                alert("Vui lòng nhập ID nhân vật!"); 
+                return; 
+            }
+            localStorage.setItem("viper_checkout", JSON.stringify({ game: game, fullId: fullId }));
+            window.location.href = "nap.html";
+        }
+
+        // Tải lịch sử giao dịch ra trang chủ
+        function loadHomeHistory() {
+            let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+            let container = document.getElementById("homeHistoryList");
+            if (history.length === 0) return;
+
+            container.innerHTML = "";
+            // Lấy tối đa 3 giao dịch mới nhất hiển thị ra trang chủ
+            let recent = history.slice(0, 3);
+            recent.forEach(item => {
+                let div = document.createElement("div");
+                div.style.background = "rgba(18, 24, 38, 0.6)";
+                div.style.border = "1px solid #2a3b6c";
+                div.style.padding = "6px 10px";
+                div.style.borderRadius = "6px";
+                div.style.marginBottom = "6px";
+                div.style.display = "flex";
+                div.style.justifyContent = "space-between";
+                div.style.alignItems = "center";
+                div.innerHTML = `
+                    <span><b>[${item.game}]</b> ID: <span style="color:#00ffcc">${item.fullId}</span></span>
+                    <span style="color: #ff007f; font-weight: bold;">${item.package}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Cơ chế đếm đúng 8 lần nhấn để mở bảng nhập pass (Pass: 30911)
+        let adminClickCount = 0;
+        function handleAdminClick() {
+            adminClickCount++;
+            if (adminClickCount >= 8) {
+                adminClickCount = 0; // Reset lại bộ đếm
+                let pin = prompt("Nhập mã PIN quản trị viên:");
+                if (pin === "30911") { 
+                    window.location.href = "admin.html"; 
+                } else if (pin !== null) { 
+                    alert("Mã PIN không chính xác!"); 
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
