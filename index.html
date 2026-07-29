@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Hệ Thống Nạp Game Tự Động</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ GÓC PHẢI PHÍA TRÊN -->
+<div style="position: absolute; top: 15px; right: 15px; font-size: 13px; z-index: 100;" id="topAuthArea">
+    <div id="authLinks">
+        <a href="login.html" style="color: #00ffcc; text-decoration: none; font-weight: bold; margin-right: 10px;">Đăng nhập</a>
+        <a href="register.html" style="color: #ff007f; text-decoration: none; font-weight: bold;">Đăng ký</a>
+    </div>
+    <div id="authLogged" style="display: none; color: #cbd5e1;">
+        <span id="loggedUser" style="color: #00ffcc; font-weight: bold;"></span> 
+        (<span id="loggedBalance" style="color: #ffaa00;">0đ</span>)
+        <button onclick="logout()" style="background: #ff3366; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px; font-size: 11px;">Đăng xuất</button>
+    </div>
+</div>
+
+<div class="container">
+    <h2>VIPER SHOP - NẠP GAME</h2>
+
+    <form id="napForm">
+        <div class="form-group">
+            <label>Chọn Game:</label>
+            <select id="gameSelect">
+                <option value="Liên Quân Mobile">Liên Quân Mobile</option>
+                <option value="Free Fire">Free Fire</option>
+                <option value="Roblox">Roblox</option>
+                <option value="Tốc Chiến">Tốc Chiến</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>ID Nhân Vật / Tài khoản:</label>
+            <input type="text" id="gameId" placeholder="Nhập ID trong game của bạn...">
+        </div>
+
+        <div class="form-group">
+            <label>Chọn Gói Nạp:</label>
+            <select id="packageSelect">
+                <option value="Gói Thử Nghiệm - 20,000đ">Gói Thử Nghiệm - 20,000đ</option>
+                <option value="Gói Sơ Cấp - 50,000đ">Gói Sơ Cấp - 50,000đ</option>
+                <option value="Gói Trung Cấp - 100,000đ">Gói Trung Cấp - 100,000đ</option>
+                <option value="Gói Cao Cấp - 200,000đ">Gói Cao Cấp - 200,000đ</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Phương thức thanh toán:</label>
+            <select id="paymentMethod" onchange="togglePaymentFields()">
+                <option value="Số dư ví (Khuyên dùng)">Số dư ví trên web</option>
+                <option value="Chuyển khoản QR">Chuyển khoản Ngân hàng / Momo</option>
+                <option value="Thẻ cào điện thoại">Thẻ cào điện thoại</option>
+            </select>
+        </div>
+
+        <!-- Khung nhập thẻ cào (Ẩn/Hiện theo phương thức) -->
+        <div id="cardFields" style="display: none; background: rgba(11, 15, 25, 0.8); padding: 10px; border-radius: 6px; border: 1px dashed #ff007f; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 8px;">
+                <label>Loại thẻ:</label>
+                <select id="cardType">
+                    <option value="Viettel">Viettel</option>
+                    <option value="Mobifone">Mobifone</option>
+                    <option value="Vinaphone">Vinaphone</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+                <label>Mã Thẻ (PIN):</label>
+                <input type="text" id="cardCode" placeholder="Nhập mã thẻ cào...">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Số Seri:</label>
+                <input type="text" id="cardSerial" placeholder="Nhập số seri...">
+            </div>
+        </div>
+
+        <button type="button" onclick="submitOrder()">XÁC NHẬN NẠP NGAY</button>
+    </form>
+</div>
+
+<script>
+    // Kiểm tra trạng thái đăng nhập khi tải trang
+    window.addEventListener('DOMContentLoaded', () => {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        if (currentUser) {
+            document.getElementById("authLinks").style.display = "none";
+            document.getElementById("authLogged").style.display = "block";
+            document.getElementById("loggedUser").innerText = currentUser.username;
+            document.getElementById("loggedBalance").innerText = Number(currentUser.balance || 0).toLocaleString('vi-VN') + "đ";
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem('viper_current_user');
+        alert("Đã đăng xuất tài khoản!");
+        location.reload();
+    }
+
+    function togglePaymentFields() {
+        let method = document.getElementById("paymentMethod").value;
+        let cardFields = document.getElementById("cardFields");
+        if (method === "Thẻ cào điện thoại") {
+            cardFields.style.display = "block";
+        } else {
+            cardFields.style.display = "none";
+        }
+    }
+
+    function submitOrder() {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        let game = document.getElementById("gameSelect").value;
+        let fullId = document.getElementById("gameId").value.trim();
+        let pkg = document.getElementById("packageSelect").value;
+        let payment = document.getElementById("paymentMethod").value;
+
+        if (!fullId) {
+            alert("Vui lòng nhập ID nhân vật hoặc tài khoản trong game!");
+            return;
+        }
+
+        let cardData = null;
+        if (payment === "Thẻ cào điện thoại") {
+            let cardType = document.getElementById("cardType").value;
+            let cardCode = document.getElementById("cardCode").value.trim();
+            let cardSerial = document.getElementById("cardSerial").value.trim();
+
+            if (!cardCode || !cardSerial) {
+                alert("Vui lòng nhập đầy đủ Mã thẻ và Số Seri!");
+                return;
+            }
+            cardData = { cardType, cardCode, cardSerial };
+        }
+
+        let orderItem = {
+            username: currentUser ? currentUser.username : "Khách vãng lai",
+            game: game,
+            fullId: fullId,
+            package: pkg,
+            payment: payment,
+            card: cardData,
+            status: "Chờ xử lý",
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        let history = JSON.parse(localStorage.getItem('viper_history')) || [];
+        history.unshift(orderItem);
+        localStorage.setItem('viper_history', JSON.stringify(history));
+
+        alert("Gửi đơn hàng thành công! Đơn của bạn đang chờ hệ thống xử lý.");
+        document.getElementById("napForm").reset();
+        togglePaymentFields();
+    }
+</script>
+
+</body>
+</html>
