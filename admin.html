@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Quản Trị Hệ Thống</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #0b0f19; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; }
+        .container { max-width: 480px; margin: 0 auto; background: rgba(26, 34, 54, 0.7); border: 1px solid #2a3b6c; border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: #121826; padding: 12px 15px; border-radius: 12px; border: 1px solid #2a3b6c; margin-bottom: 12px; font-size: 13px; }
+        .navbar a { color: #cbd5e1; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px; transition: 0.2s; }
+        .navbar a:hover { background: rgba(0,255,204,0.15); color: #00ffcc; }
+
+        .tab-box { display: flex; gap: 8px; margin-bottom: 15px; background: #121826; padding: 4px; border-radius: 10px; border: 1px solid #2a3b6c; }
+        .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; color: #94a3b8; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; font-size: 12px; transition: 0.2s; }
+        .tab-btn.active { background: #00ffcc; color: #0b0f19; box-shadow: 0 0 12px rgba(0,255,204,0.4); }
+        
+        .panel { display: none; }
+        .panel.active { display: block; }
+        
+        .admin-card { background: #121826; border: 1px solid #2a3b6c; padding: 14px; border-radius: 12px; margin-bottom: 12px; position: relative; }
+        .admin-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #facc15; border-radius: 4px 0 0 4px; }
+        
+        .row-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; }
+        .label { color: #94a3b8; }
+        .value { font-weight: 600; color: #f8fafc; }
+
+        .action-box { display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid #1e293b; padding-top: 10px; }
+        .btn-approve { flex: 1; background: linear-gradient(135deg, #00ffcc, #00b386); color: #0b0f19; border: none; padding: 8px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,255,204,0.3); }
+        .btn-reject { flex: 1; background: linear-gradient(135deg, #ff3366, #cc0033); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s; box-shadow: 0 2px 8px rgba(255,51,102,0.3); }
+
+        .badge-status { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+        .empty-text { color: #64748b; font-size: 12px; font-style: italic; background: #121826; padding: 15px; border-radius: 8px; text-align: center; border: 1px dashed #2a3b6c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="navbar">
+        <span style="color: #00ffcc; font-weight: bold; font-size: 15px;">🛡️ ADMIN PANEL</span>
+        <a href="index.html">Về Trang Chủ</a>
+    </div>
+
+    <div class="tab-box">
+        <button class="tab-btn active" id="tabBtnDeposit" onclick="switchAdminTab('deposit')">💰 Duyệt Nạp Tiền</button>
+        <button class="tab-btn" id="tabBtnGame" onclick="switchAdminTab('game')">🎮 Duyệt Gói Game</button>
+    </div>
+
+    <!-- TAB 1: DUYỆT NẠP TIỀN -->
+    <div class="panel active" id="adminDepositPanel">
+        <div id="adminDepositList"></div>
+    </div>
+
+    <!-- TAB 2: DUYỆT GÓI GAME -->
+    <div class="panel" id="adminGamePanel">
+        <div id="adminGameList"></div>
+    </div>
+</div>
+
+<script>
+    function switchAdminTab(type) {
+        document.getElementById('tabBtnDeposit').classList.toggle('active', type === 'deposit');
+        document.getElementById('tabBtnGame').classList.toggle('active', type === 'game');
+        document.getElementById('adminDepositPanel').classList.toggle('active', type === 'deposit');
+        document.getElementById('adminGamePanel').classList.toggle('active', type === 'game');
+    }
+
+    function loadAdminData() {
+        let orders = JSON.parse(localStorage.getItem('viper_orders')) || [];
+
+        // 1. Phân loại đơn Nạp Tiền
+        let deposits = orders.filter(o => o.category === 'deposit' || o.type === 'Chuyển khoản QR' || o.type === 'Nạp Thẻ Cào');
+        let depositContainer = document.getElementById('adminDepositList');
+        if (deposits.length === 0) {
+            depositContainer.innerHTML = '<div class="empty-text">Không có yêu cầu nạp tiền nào đang chờ.</div>';
+        } else {
+            depositContainer.innerHTML = deposits.map((o) => {
+                let originalIndex = orders.indexOf(o);
+                return `
+                    <div class="admin-card">
+                        <div class="row-flex"><span class="label">Tài khoản:</span><span class="value" style="color: #00ffcc;">👤 ${o.username || 'Khách'}</span></div>
+                        <div class="row-flex"><span class="label">Hình thức:</span><span class="value">${o.type || 'Nạp tiền'}</span></div>
+                        <div class="row-flex"><span class="label">Chi tiết:</span><span class="value" style="font-size: 12px; color: #38bdf8;">${o.details || o.note || 'N/A'}</span></div>
+                        <div class="row-flex"><span class="label">Số tiền:</span><span class="value" style="color: #00ffcc;">+${Number(o.amount || 0).toLocaleString('vi-VN')}đ</span></div>
+                        <div class="row-flex"><span class="label">Trạng thái:</span><span class="badge-status">${o.status || 'Chờ xử lý'}</span></div>
+                        <div style="color: #64748b; font-size: 10px; margin-top: 6px;">🕒 ${o.time || ''}</div>
+                        
+                        ${o.status === 'Chờ xử lý' ? `
+                            <div class="action-box">
+                                <button class="btn-approve" onclick="approveDeposit(${originalIndex})">✔ Duyệt (+ Tiền)</button>
+                                <button class="btn-reject" onclick="rejectOrder(${originalIndex})">✖ Từ chối</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 2. Phân loại đơn Gói Game (Khớp chuẩn cấu trúc từ goi-nap.html gửi lên: có trường 'game' và 'package')
+        let games = orders.filter(o => o.game && o.package);
+        let gameContainer = document.getElementById('adminGameList');
+        
+        if (games.length === 0) {
+            gameContainer.innerHTML = '<div class="empty-text">Chưa có đơn mua gói game nào đang chờ.</div>';
+        } else {
+            gameContainer.innerHTML = games.map((o) => {
+                let originalIndex = orders.indexOf(o);
+                
+                return `
+                    <div class="admin-card">
+                        <div class="row-flex"><span class="label">Tài khoản:</span><span class="value" style="color: #00ffcc;">👤 ${o.username || 'Khách'}</span></div>
+                        <div class="row-flex"><span class="label">Tựa Game:</span><span class="value" style="color: #facc15;">🎮 ${o.game}</span></div>
+                        <div class="row-flex"><span class="label">Gói mua:</span><span class="value" style="color: #38bdf8;">${o.package}</span></div>
+                        <div class="row-flex"><span class="label">ID Nhân vật:</span><span class="value" style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; color: #fff;">${o.fullId || 'Không có'}</span></div>
+                        <div class="row-flex"><span class="label">Thành tiền:</span><span class="value" style="color: #00ffcc;">${Number(o.price || 0).toLocaleString('vi-VN')}đ</span></div>
+                        <div class="row-flex"><span class="label">Trạng thái:</span><span class="badge-status">${o.status || 'Chờ xử lý'}</span></div>
+                        <div style="color: #64748b; font-size: 10px; margin-top: 6px;">🕒 ${o.time || ''}</div>
+                        
+                        ${o.status === 'Chờ xử lý' ? `
+                            <div class="action-box">
+                                <button class="btn-approve" onclick="approveGame(${originalIndex})">✔ Hoàn tất đơn</button>
+                                <button class="btn-reject" onclick="rejectOrder(${originalIndex})">✖ Từ chối</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    function approveDeposit(orderIndex) {
+        let orders = JSON.parse(localStorage.getItem('viper_orders')) || [];
+        let order = orders[orderIndex];
+        if (!order) return;
+
+        order.status = "Thành công";
+
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        if (currentUser && currentUser.username === order.username) {
+            currentUser.balance = Number(currentUser.balance || 0) + Number(order.amount || 0);
+            localStorage.setItem('viper_current_user', JSON.stringify(currentUser));
+        }
+
+        let allUsers = JSON.parse(localStorage.getItem('viper_users')) || [];
+        let targetUser = allUsers.find(u => u.username === order.username);
+        if (targetUser) {
+            targetUser.balance = Number(targetUser.balance || 0) + Number(order.amount || 0);
+            localStorage.setItem('viper_users', JSON.stringify(allUsers));
+        }
+
+        localStorage.setItem('viper_orders', JSON.stringify(orders));
+        alert("✔ Đã duyệt nạp tiền thành công!");
+        loadAdminData();
+    }
+
+    function approveGame(orderIndex) {
+        let orders = JSON.parse(localStorage.getItem('viper_orders')) || [];
+        let order = orders[orderIndex];
+        if (!order) return;
+
+        order.status = "Thành công";
+        localStorage.setItem('viper_orders', JSON.stringify(orders));
+        alert("✔ Đã xác nhận hoàn thành đơn mua gói game!");
+        loadAdminData();
+    }
+
+    function rejectOrder(orderIndex) {
+        let orders = JSON.parse(localStorage.getItem('viper_orders')) || [];
+        let order = orders[orderIndex];
+        if (!order) return;
+
+        order.status = "Từ chối";
+        localStorage.setItem('viper_orders', JSON.stringify(orders));
+        alert("✖ Đã từ chối đơn hàng.");
+        loadAdminData();
+    }
+
+    loadAdminData();
+</script>
+</body>
+</html>
