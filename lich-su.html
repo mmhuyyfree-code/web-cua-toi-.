@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Lịch Sử Giao Dịch</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: rgba(18, 24, 38, 0.95); padding: 10px 15px; border-bottom: 1px solid #2a3b6c; margin-bottom: 15px; border-radius: 8px; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; margin-left: 10px; font-size: 12px; font-weight: bold; }
+        .nav-links a:hover, .nav-links a.active { color: #00ffcc; }
+        
+        .tab-menu { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tab-btn { flex: 1; padding: 9px; background: #0b0f19; border: 1px solid #2a3b6c; color: #cbd5e1; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .tab-btn.active { background: #00ffcc; color: #0b0f19; border-color: #00ffcc; }
+
+        .history-container { max-height: 380px; overflow-y: auto; padding-right: 4px; }
+        .history-container::-webkit-scrollbar { width: 5px; }
+        .history-container::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 4px; }
+
+        .history-item { background: rgba(26, 34, 54, 0.9); border: 1px solid #2a3b6c; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+        .status-pending { color: #ffaa00; font-weight: bold; }
+        .status-success { color: #00ffcc; font-weight: bold; }
+        .status-rejected { color: #ff3366; font-weight: bold; }
+        .reason-text { color: #ff99bb; font-style: italic; margin-top: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 480px;">
+    <div class="navbar">
+        <div class="nav-links">
+            <a href="#" onclick="location.href='index.html'; return false;">Trang Chủ</a>
+            <a href="#" onclick="location.href='goi-nap.html'; return false;">Gói Nạp</a>
+            <a href="#" onclick="location.href='nap-tien.html'; return false;">Nạp Ví</a>
+            <a href="#" onclick="location.href='lich-su.html'; return false;" class="active">Lịch Sử</a>
+        </div>
+        <div>
+            <a href="#" onclick="localStorage.removeItem('viper_current_user'); location.href='login.html'; return false;" style="color: #ff3366; font-size: 11px; text-decoration: none;">Thoát</a>
+        </div>
+    </div>
+
+    <h3 style="color: #00ffcc; text-align: center; margin-bottom: 12px;">📜 Lịch Sử Giao Dịch</h3>
+
+    <div class="tab-menu">
+        <button class="tab-btn active" id="btnTabWallet" onclick="switchTab('wallet')">💳 Nạp Ví / Thẻ</button>
+        <button class="tab-btn" id="btnTabGame" onclick="switchTab('game')">🎮 Mua Gói Game</button>
+    </div>
+
+    <div class="history-container" id="historyList">
+        <p style="text-align: center; color: #888;">Đang tải lịch sử...</p>
+    </div>
+</div>
+
+<script>
+    let currentTab = 'wallet';
+
+    window.addEventListener('DOMContentLoaded', () => {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        if (!currentUser) {
+            alert("Vui lòng đăng nhập để xem lịch sử!");
+            window.location.href = "login.html";
+            return;
+        }
+        renderHistory();
+    });
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('btnTabWallet').classList.toggle('active', tab === 'wallet');
+        document.getElementById('btnTabGame').classList.toggle('active', tab === 'game');
+        renderHistory();
+    }
+
+    function renderHistory() {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        let historyListDiv = document.getElementById('historyList');
+        let html = '';
+
+        if (currentTab === 'wallet') {
+            let walletHistory = JSON.parse(localStorage.getItem('viper_orders')) || [];
+            let myWallet = walletHistory.filter(item => item.username === currentUser.username && (item.type === "Nạp Thẻ Cào" || (item.game || '').toLowerCase().includes('nạp')));
+
+            if (myWallet.length === 0) {
+                historyListDiv.innerHTML = `<p style="text-align: center; color: #888; padding: 20px;">Chưa có lịch sử nạp ví nào.</p>`;
+                return;
+            }
+
+            myWallet.forEach(item => {
+                let statusLower = (item.status || '').toLowerCase();
+                let isRejected = statusLower.includes('từ chối') || statusLower.includes('hủy');
+                let isPending = statusLower.includes('chờ');
+                let isSuccess = !isRejected && !isPending;
+
+                let statusText = isPending ? '⏳ Đang chờ xử lý' : (isSuccess ? '✅ Thành công' : '❌ Từ chối');
+                let statusClass = isPending ? 'status-pending' : (isSuccess ? 'status-success' : 'status-rejected');
+                let reasonHtml = isRejected && item.reason ? `<div class="reason-text">Lý do: ${item.reason}</div>` : '';
+
+                html += `
+                    <div class="history-item">
+                        <div style="font-weight: bold; color: #ffaa00; margin-bottom: 4px;">💳 [Nạp Ví] ${item.type || 'Giao dịch ví'}</div>
+                        <div>Chi tiết: <b>${item.details || item.package || 'N/A'}</b></div>
+                        <div>Trạng thái: <span class="${statusClass}">${statusText}</span></div>
+                        ${reasonHtml}
+                        <div style="font-size: 11px; color: #888; margin-top: 4px;">Thời gian: ${item.time || 'N/A'}</div>
+                    </div>
+                `;
+            });
+
+        } else {
+            let orders1 = JSON.parse(localStorage.getItem('viper_orders')) || [];
+            let orders2 = JSON.parse(localStorage.getItem('viper_history')) || [];
+            let allGameOrders = [...orders1, ...orders2];
+
+            let myGame = allGameOrders.filter(item => {
+                if (!item || item.username !== currentUser.username) return false;
+                if (item.type === "Nạp Thẻ Cào") return false;
+                let gameName = (item.game || item.type || '').toLowerCase();
+                if (gameName.includes('nạp')) return false;
+                return true;
+            });
+
+            if (myGame.length === 0) {
+                historyListDiv.innerHTML = `<p style="text-align: center; color: #888; padding: 20px;">Chưa có lịch sử mua gói game nào.</p>`;
+                return;
+            }
+
+            myGame.forEach(item => {
+                let statusLower = (item.status || '').toLowerCase();
+                let isRejected = statusLower.includes('từ chối') || statusLower.includes('hủy');
+                let isPending = statusLower.includes('chờ') || statusLower === '';
+                let isSuccess = !isRejected && !isPending;
+
+                let statusText = isPending ? '⏳ Đang chờ xử lý' : (isSuccess ? '✅ Đã giao thành công' : '❌ Đã hủy / Từ chối');
+                let statusClass = isPending ? 'status-pending' : (isSuccess ? 'status-success' : 'status-rejected');
+                let reasonHtml = isRejected && item.reason ? `<div class="reason-text">Lý do: ${item.reason}</div>` : '';
+
+                html += `
+                    <div class="history-item">
+                        <div style="font-weight: bold; color: #00ffcc; margin-bottom: 4px;">🎮 [Gói Game] ${item.game || 'Gói Game'}</div>
+                        <div>Gói mua: <b>${item.package || 'N/A'}</b></div>
+                        <div>ID Game: <b>${item.fullId || 'N/A'}</b></div>
+                        <div>Trạng thái: <span class="${statusClass}">${statusText}</span></div>
+                        ${reasonHtml}
+                        <div style="font-size: 11px; color: #888; margin-top: 4px;">Thời gian: ${item.time || 'N/A'}</div>
+                    </div>
+                `;
+            });
+        }
+
+        historyListDiv.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
