@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Nạp Tiền Vào Ví</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: rgba(18, 24, 38, 0.95); padding: 10px 15px; border-bottom: 1px solid #2a3b6c; margin-bottom: 15px; border-radius: 8px; font-size: 12px; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; margin-right: 8px; font-weight: bold; }
+        .nav-links a:hover, .nav-links a.active { color: #00ffcc; }
+        
+        .tab-menu { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 11px; background: #0b0f19; border: 1px solid #2a3b6c; color: #cbd5e1; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .tab-btn.active { background: #00ffcc; color: #0b0f19; border-color: #00ffcc; }
+
+        .card-panel { background: rgba(26, 34, 54, 0.9); border: 1px solid #2a3b6c; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: none; }
+        .card-panel.active { display: block; }
+        
+        .qr-box { background: #ffffff; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 12px; }
+        .qr-box img { max-width: 200px; height: auto; border-radius: 6px; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 480px;">
+    <div class="navbar">
+        <div class="nav-links">
+            <a href="#" onclick="location.href='index.html'; return false;">Trang Chủ</a>
+            <a href="#" onclick="location.href='goi-nap.html'; return false;">Gói Nạp</a>
+            <a href="#" onclick="location.href='nap-tien.html'; return false;" class="active">Nạp Ví</a>
+            <a href="#" onclick="location.href='lich-su.html'; return false;">Lịch Sử</a>
+        </div>
+        <div>
+            <span id="userBalanceDisplay" style="color: #00ffcc; font-weight: bold; font-size: 12px;">0đ</span>
+        </div>
+    </div>
+
+    <h3 style="color: #00ffcc; text-align: center; margin-bottom: 12px; font-size: 16px;">💳 NẠP TIỀN VÀO TÀI KHOẢN</h3>
+
+    <!-- Thanh chuyển tab lựa chọn hình thức nạp -->
+    <div class="tab-menu">
+        <button class="tab-btn active" id="btnTabQR" onclick="switchDepositTab('qr')">📲 Chuyển Khoản QR</button>
+        <button class="tab-btn" id="btnTabCard" onclick="switchDepositTab('card')">🎟️ Nạp Thẻ Cào</button>
+    </div>
+
+    <!-- PHẦN 1: CHUYỂN KHOẢN QR NGÂN HÀNG -->
+    <div class="card-panel active" id="panelQR">
+        <h4 style="color: #00ffcc; margin-bottom: 10px; font-size: 14px; text-align: center;">Quét mã QR hoặc Chuyển khoản trực tiếp</h4>
+        
+        <div class="qr-box">
+            <img src="1803.jpg" alt="QR Ngân Hàng BIDV" onerror="this.style.display='none'; document.getElementById('qrFallback').style.display='block';">
+            <div id="qrFallback" style="display:none; color: #333; font-size: 12px; font-weight: bold; padding: 20px;">[Không tìm thấy ảnh 1803.jpg - Vui lòng kiểm tra lại tên file ảnh]</div>
+        </div>
+
+        <div style="background: #0b0f19; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; border: 1px solid #2a3b6c;">
+            <div style="color: #cbd5e1; margin-bottom: 6px;">Ngân hàng: <b style="color: white;">BIDV (TMCP Đầu tư và Phát triển Việt Nam)</b></div>
+            <div style="color: #cbd5e1; margin-bottom: 6px;">Số tài khoản: <b style="color: #00ffcc; font-size: 15px;">8877945567</b></div>
+            <div style="color: #cbd5e1; margin-bottom: 6px;">Nhân viên giao dịch: <b style="color: #ffaa00; text-transform: uppercase;">VI THI HA</b></div>
+            <div style="color: #cbd5e1;">Nội dung CK: <b id="transferSyntax" style="color: #00ffcc; background: rgba(0,255,204,0.1); padding: 2px 6px; border-radius: 4px;">NAPVIP ...</b></div>
+        </div>
+        <p style="color: #cbd5e1; font-size: 11px; text-align: center;">Hệ thống sẽ tự động duyệt và cộng tiền vào ví sau 1-3 phút khi nhận được chuyển khoản.</p>
+    </div>
+
+    <!-- PHẦN 2: NẠP THẺ CÀO ĐIỆN THOẠI -->
+    <div class="card-panel" id="panelCard">
+        <h4 style="color: #00ffcc; margin-bottom: 12px; font-size: 14px; text-align: center;">Nạp tiền qua Thẻ Cào Điện Thoại</h4>
+        
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 4px;">Chọn nhà mạng:</label>
+            <select id="telco" style="width: 100%; padding: 10px; background: #0b0f19; border: 1px solid #2a3b6c; color: white; border-radius: 6px; font-size: 12px;">
+                <option value="Viettel">Viettel</option>
+                <option value="Mobifone">Mobifone</option>
+                <option value="Vinaphone">Vinaphone</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 4px;">Mệnh giá:</label>
+            <select id="amount" style="width: 100%; padding: 10px; background: #0b0f19; border: 1px solid #2a3b6c; color: white; border-radius: 6px; font-size: 12px;">
+                <option value="10000">10.000đ</option>
+                <option value="20000">20.000đ</option>
+                <option value="50000">50.000đ</option>
+                <option value="100000">100.000đ</option>
+                <option value="200000">200.000đ</option>
+                <option value="500000">500.000đ</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 4px;">Mã thẻ cào:</label>
+            <input type="text" id="pin" placeholder="Nhập mã thẻ..." style="width: 100%; padding: 10px; background: #0b0f19; border: 1px solid #2a3b6c; color: white; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 4px;">Số seri:</label>
+            <input type="text" id="seri" placeholder="Nhập số seri..." style="width: 100%; padding: 10px; background: #0b0f19; border: 1px solid #2a3b6c; color: white; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+        </div>
+
+        <button type="button" onclick="submitCard()" style="width: 100%; padding: 12px; background: #00ffcc; color: #0b0f19; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">GỬI THẺ NẠP NGAY</button>
+    </div>
+</div>
+
+<script>
+    let currentUser = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        if (!currentUser) {
+            alert("Vui lòng đăng nhập trước khi nạp tiền!");
+            window.location.href = "login.html";
+            return;
+        }
+        document.getElementById('userBalanceDisplay').innerText = Number(currentUser.balance || 0).toLocaleString('vi-VN') + "đ";
+        document.getElementById('transferSyntax').innerText = "NAPVIP " + currentUser.username;
+    });
+
+    function switchDepositTab(tab) {
+        document.getElementById('btnTabQR').classList.toggle('active', tab === 'qr');
+        document.getElementById('btnTabCard').classList.toggle('active', tab === 'card');
+        
+        document.getElementById('panelQR').classList.toggle('active', tab === 'qr');
+        document.getElementById('panelCard').classList.toggle('active', tab === 'card');
+    }
+
+    function submitCard() {
+        let telco = document.getElementById('telco').value;
+        let amount = Number(document.getElementById('amount').value);
+        let pin = document.getElementById('pin').value.trim();
+        let seri = document.getElementById('seri').value.trim();
+
+        if (!pin || !seri) {
+            alert("Vui lòng nhập đầy đủ mã thẻ và số seri!");
+            return;
+        }
+
+        let cardRequest = {
+            username: currentUser.username,
+            type: "Nạp Thẻ Cào",
+            details: `${telco} - ${amount.toLocaleString('vi-VN')}đ`,
+            pin: pin,
+            seri: seri,
+            status: "Chờ xử lý",
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        let orders = JSON.parse(localStorage.getItem('viper_orders')) || [];
+        orders.unshift(cardRequest);
+        localStorage.setItem('viper_orders', JSON.stringify(orders));
+
+        alert("Gửi thẻ thành công! Hệ thống sẽ kiểm tra và duyệt cộng tiền vào ví cho bạn sớm.");
+        window.location.href = "lich-su.html";
+    }
+</script>
+
+</body>
+</html>
