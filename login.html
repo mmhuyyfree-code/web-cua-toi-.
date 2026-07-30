@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - VIPER SHOP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container" style="max-width: 400px;">
+    <h2>ĐĂNG NHẬP TÀI KHOẢN</h2>
+    <div style="color: #cbd5e1; font-size: 12px; text-align: center; margin-bottom: 15px;">Đăng nhập để quản lý số dư và lịch sử nạp</div>
+
+    <div class="form-group">
+        <label>Tên đăng nhập hoặc Số điện thoại:</label>
+        <input type="text" id="loginUser" placeholder="Nhập tài khoản của bạn...">
+    </div>
+
+    <div class="form-group">
+        <label>Mật khẩu:</label>
+        <input type="password" id="loginPass" placeholder="Nhập mật khẩu...">
+    </div>
+
+    <button type="button" onclick="handleLogin()" style="background: linear-gradient(135deg, #00ffcc, #0072ff); color: #0b0f19; font-weight: bold; margin-top: 10px;">ĐĂNG NHẬP</button>
+
+    <div style="text-align: center; margin-top: 15px; font-size: 12px;">
+        <span style="color: #cbd5e1;">Chưa có tài khoản?</span> 
+        <a href="#" onclick="location.href='register.html'; return false;" style="color: #00ffcc; text-decoration: none; font-weight: bold;">Đăng ký ngay</a>
+    </div>
+
+    <button type="button" onclick="location.href='index.html'" style="background: #2a3b6c; color: #ffffff; margin-top: 10px; border:none; cursor:pointer; padding:12px; border-radius:8px; width:100%; font-weight:bold;">⬅ VỀ TRANG CHỦ</button>
+</div>
+
+<script>
+    function handleLogin() {
+        let user = document.getElementById("loginUser").value.trim();
+        let pass = document.getElementById("loginPass").value.trim();
+
+        if (!user || !pass) {
+            alert("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('viper_users')) || [];
+        let found = users.find(u => u.username === user && u.password === pass);
+
+        if (found) {
+            localStorage.setItem('viper_current_user', JSON.stringify(found));
+            alert("Đăng nhập thành công!");
+            window.location.href = "index.html";
+        } else {
+            alert("Sai tên đăng nhập hoặc mật khẩu!");
+        }
+    }
+</script>
+
+</body>
+</html>
