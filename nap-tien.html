@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Nạp Ví</title>
+    <style>
+        body { background: #0b0f19; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
+        .container { max-width: 480px; margin: 0 auto; background: #121826; border: 1px solid #2a3b6c; border-radius: 16px; padding: 16px; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 13px; }
+        .navbar a { color: #00ffcc; text-decoration: none; font-weight: bold; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 10px; background: #1a2236; border: 1px solid #2a3b6c; color: white; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; }
+        .btn { background: #00ffcc; color: #0b0f19; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="navbar">
+        <span style="color: #00ffcc; font-weight: bold;">💳 NẠP TIỀN VÀO VÍ</span>
+        <a href="index.html">Trang Chủ</a>
+    </div>
+
+    <div class="form-group">
+        <label>Hình thức nạp</label>
+        <select id="depositType">
+            <option value="Chuyển khoản QR">Chuyển khoản ngân hàng / QR</option>
+            <option value="Thẻ Cào Điện Thoại">Thẻ cào điện thoại</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Số tiền nạp (VNĐ)</label>
+        <input type="number" id="amount" placeholder="Nhập số tiền..." />
+    </div>
+
+    <button class="btn" onclick="submitDeposit()">XÁC NHẬN NẠP TIỀN</button>
+</div>
+
+<script>
+    function submitDeposit() {
+        let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+        if (!currentUser) {
+            alert("Vui lòng đăng nhập!");
+            window.location.href = "login.html";
+            return;
+        }
+
+        let amount = Number(document.getElementById('amount').value);
+        if (!amount || amount <= 0) {
+            alert("Vui lòng nhập số tiền hợp lệ!");
+            return;
+        }
+
+        let depositData = {
+            username: currentUser.username,
+            type: document.getElementById('depositType').value,
+            amount: amount,
+            status: "Chờ xử lý",
+            time: new Date().toLocaleString('vi-VN')
+        };
+
+        // Lưu riêng vào kho 'viper_deposits'
+        let deposits = JSON.parse(localStorage.getItem('viper_deposits')) || [];
+        deposits.unshift(depositData);
+        localStorage.setItem('viper_deposits', JSON.stringify(deposits));
+
+        alert("✔ Đã tạo yêu cầu nạp tiền thành công!");
+        window.location.href = "lich-su.html";
+    }
+</script>
+</body>
+</html>
