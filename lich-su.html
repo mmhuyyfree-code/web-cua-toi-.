@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIPER SHOP - Lịch Sử Giao Dịch</title>
+    <style>
+        body { background: #0b0f19; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
+        .container { max-width: 480px; margin: 0 auto; background: rgba(26, 34, 54, 0.9); border: 1px solid #2a3b6c; border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: #121826; padding: 12px 15px; border-radius: 12px; border: 1px solid #2a3b6c; margin-bottom: 15px; font-size: 13px; }
+        .navbar a { color: #cbd5e1; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px; }
+        h3 { color: #00ffcc; font-size: 16px; margin-bottom: 15px; text-align: center; }
+        .history-card { background: #121826; border: 1px solid #2a3b6c; padding: 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+        .row-flex { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .label { color: #94a3b8; }
+        .empty { text-align: center; color: #64748b; font-size: 13px; padding: 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="navbar">
+        <span style="color: #00ffcc; font-weight: bold;">📜 LỊCH SỬ GIAO DỊCH</span>
+        <a href="index.html">Trang Chủ</a>
+    </div>
+
+    <div id="historyList">Đang tải lịch sử...</div>
+</div>
+
+<script>
+    let currentUser = JSON.parse(localStorage.getItem('viper_current_user'));
+    let container = document.getElementById('historyList');
+
+    if (!currentUser) {
+        container.innerHTML = '<div class="empty">Vui lòng đăng nhập để xem lịch sử!</div>';
+    } else {
+        let orders = JSON.parse(localStorage.getItem('viper_orders')) || [];
+        // Lọc chỉ lấy đơn hàng của đúng user đang đăng nhập
+        let myOrders = orders.filter(o => o.username === currentUser.username);
+
+        if (myOrders.length === 0) {
+            container.innerHTML = '<div class="empty">Chưa có lịch sử giao dịch nào.</div>';
+        } else {
+            let html = '';
+            myOrders.forEach(o => {
+                let isDeposit = o.category === 'deposit' || o.type?.includes('Chuyển khoản') || o.type?.includes('Thẻ Cào');
+                let title = isDeposit ? `Nạp ví: +${Number(o.amount || 0).toLocaleString()}đ` : `Mua gói: ${o.game} - ${o.package}`;
+                let statusColor = o.status === 'Thành công' ? '#22c55e' : (o.status === 'Từ chối' ? '#ef4444' : '#facc15');
+
+                html += `
+                    <div class="history-card">
+                        <div class="row-flex">
+                            <b style="color: #00ffcc;">${title}</b>
+                            <span style="color: ${statusColor}; font-weight: bold; font-size: 11px;">${o.status}</span>
+                        </div>
+                        <div class="row-flex"><span class="label">Hình thức / Chi tiết:</span> <span>${o.type || o.details || 'Giao dịch hệ thống'}</span></div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">🕒 ${o.time || 'Không rõ thời gian'}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    }
+</script>
+
+</body>
+</html>
